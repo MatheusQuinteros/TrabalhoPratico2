@@ -1,3 +1,5 @@
+import java.util.List;
+
 public class JogoDaPacoquinha {
 
     private int[][] tabuleiro; 
@@ -36,8 +38,22 @@ public class JogoDaPacoquinha {
         return 0;
     }
 
-    public void proxima_jogada() {
+    public void avancarJogada() {
         // Avança o estado do turno ciclicamente
         estadoTurno = (estadoTurno % 4) + 1;
+    }
+
+    public boolean jogar(int idPeca, int destinoX, int destinoY) {
+        // Valida e executa a jogada, retornando true se válida ou false caso contrário
+        return false;
+    }
+
+    private List<int[]> jogadasValidas(int idPeca) {
+        // Retorna a lista de jogadas válidas com base na peça escolhida, retornando vazia se não for valida
+        return null;
+    }
+
+    private boolean pecaValida(int idPeca) {
+        return false;
     }
 }
