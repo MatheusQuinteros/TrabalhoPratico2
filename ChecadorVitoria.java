@@ -1,5 +1,5 @@
 public class ChecadorVitoria {
-    public boolean ganhou(Tabuleiro tabuleiro) {
-        return false;
+    public int ganhou(Tabuleiro tabuleiro) {
+        return -1;
     }
 }
