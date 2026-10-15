@@ -23,6 +23,6 @@ public class Turno{
     }
 
     public void avançarTurno(){// avança a jogada
-        estadoTurno = (estadoTurno % 4) + 1;
+        estadoTurno = (estadoTurno + 1) % 4;
     }
 }

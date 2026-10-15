@@ -1,3 +1,5 @@
+import java.util.Arrays;
+
 public class Tabuleiro {
     private float[][][] tabuleiro; //float pois é mais prática a conversão para tensor no pytorch
 
@@ -7,6 +9,8 @@ public class Tabuleiro {
     public Tabuleiro(){
         // Inicia o tabuleiro com as peças em seus locais iniciais
         tabuleiro = new float[CAMADAS][TAMANHO][TAMANHO];
+        
+        Arrays.fill(tabuleiro, 0);
 
         for(int i = 0; i < TAMANHO; i++){ // peças jogador 1
             tabuleiro[1][0][i] = 1;
