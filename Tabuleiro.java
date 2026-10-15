@@ -1,37 +1,21 @@
 public class Tabuleiro {
-    private int[][] tabuleiro;
-    private static final int TAMANHO = 5; //Tamanho sempre será o mesmo
-
-    public Tabuleiro(){
-        tabuleiro = new int[TAMANHO][TAMANHO];
-        tabuleiro = iniciaTabuleiro();
-    }
-
-    public void  iniciaTabuleiro(){
-        for (int i = 0;i<TAMANHO;i++){
-            for (int j = 0;j<TAMANHO;j++){
-                
-                if(i==0){
-                    tabuleiro[i][j] = 1;
-                }
-                if(i==4){
-                    tabuleiro[i][j] = 2;    
-                }
-                if(i==2 & j==2){
-                    tabuleiro[i][j] = 3;
-                }
-                else tabuleiro[i][j] = 0;
-            }
+    private float[][][] tabuleiro; //float pois é mais prática a conversão para tensor no pytorch
+     private static final int TAMANHO = 5;
+    private Tabuleiro(){
+        // Inicia o tabuleiro com as peças em seus locais iniciais
+        tabuleiro = new float[TAMANHO][TAMANHO];
+        for(int i = 0; i < TAMANHO; i++){ // peças jogador 1
+            tabuleiro[0][0][i] = 1;
         }
+
+        for(int i = 0; i < TAMANHO; i++){ // peças jogador 1
+            tabuleiro[1][4][i] = 1;
+        }
+
+        tabuleiro[2][2][2] = 1; // paçoca
     }
 
-    public int[][] getTabuleiro() {
+    public float[][][] getTabuleiro() {
         return tabuleiro;
     }
-
-    public int getCasa(int x, int y){
-        return this.tabuleiro[x][y];
-    }
-
-    
 }

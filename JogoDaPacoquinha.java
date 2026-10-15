@@ -2,58 +2,40 @@ import java.util.List;
 
 public class JogoDaPacoquinha {
 
-    private int[][] tabuleiro; 
-    // 0 casa livre
-    // 1 a 5 peças do jogador 1, 
-    // 6 a 10 peças do jogador 2,
-    // 11 paçoquinha
-
-    private int estadoTurno;
-    // 0 - jogador 1 paçoca
-    // 1 - jogador 1 peça
-    // 2 - jogador 2 paçoca
-    // 3 - jogador 2 peça
+    private Tabuleiro tabuleiro_jogo; 
+    private Turno turno_jogo;
+    private ChecadorVitoria checador_jogo;
 
     public JogoDaPacoquinha() {
         // Construtor: Inicializa o tabuleiro 5x5 e o estado inicial
-        tabuleiro = new int[5][5];
-        iniciaTabuleiro();
-        estadoTurno = 3;
+        tabuleiro_jogo = new Tabuleiro();
+        turno_jogo = new Turno();
+        checador_jogo = new ChecadorVitoria();
     }
 
-    private void iniciaTabuleiro() {
-        // Inicia o tabuleiro com as peças em seus locais iniciais
-    }
+    public int jogaRodadaPvP(int origemX, int origemY, int destinoX, int destinoY){
+        //retorna 
+        // 0 - jogada invalida (interface deve repetir)
+        // 1 - jogada valida p1 campeao
+        // 2 - jogada valida p2 campeao
+        // 3 - jogada valida sem campeao
+        
+        boolean jogada_valida = true;
+        
+        if (turno_jogo.deveMoverPaçoquinha()){
+            jogada_valida = tabuleiro_jogo.jogar(origemX, origemY, 0, destinoX, destinoY);
+        }
 
-    public int[][] getTabuleiro() {
-        return tabuleiro;
-    }
+        else {
+           jogada_valida = tabuleiro_jogo.jogar(origemX, origemY, turno_jogo.getJogadorAtual(), destinoX, destinoY);
+        }
 
-    public int getEstadoTurno() {
-        return estadoTurno;
-    }
+        if (!jogada_valida) return 0;
 
-    public int ganhou() {
-        // Retorna: 0 (segue o jogo), 1 (Jogadora 1 venceu), 2 (Jogadora 2 venceu)
-        return 0;
-    }
+        if (checador_jogo.ganhou(tabuleiro_jogo)) return turno_jogo.getJogadorAtual();
 
-    public void avancarJogada() {
-        // Avança o estado do turno ciclicamente
-        estadoTurno = (estadoTurno % 4) + 1;
-    }
+        turno_jogo.avançarTurno();
 
-    public boolean jogar(int idPeca, int destinoX, int destinoY) {
-        // Valida e executa a jogada, retornando true se válida ou false caso contrário
-        return false;
-    }
-
-    private List<int[]> jogadasValidas(int idPeca) {
-        // Retorna a lista de jogadas válidas com base na peça escolhida, retornando vazia se não for valida
-        return null;
-    }
-
-    private boolean pecaValida(int idPeca) {
-        return false;
+        return 3;
     }
 }
