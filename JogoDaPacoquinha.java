@@ -32,7 +32,9 @@ public class JogoDaPacoquinha {
 
         if (!jogada_valida) return 0;
 
-        if (checador_jogo.ganhou(tabuleiro_jogo)) return turno_jogo.getJogadorAtual();
+        ganhou = checador_jogo.ganhou(tabuleiro_jogo)
+
+        if (ganhou !=-1) return ganhou;
 
         turno_jogo.avançarTurno();
 
