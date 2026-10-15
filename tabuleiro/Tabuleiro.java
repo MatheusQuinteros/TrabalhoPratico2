@@ -1,10 +1,12 @@
+package tabuleiro;
 import java.util.Arrays;
 
 public class Tabuleiro {
     private float[][][] tabuleiro; //float pois é mais prática a conversão para tensor no pytorch
+    private Peca pacoca;
 
-    private static final int TAMANHO = 5;
-    private static final int CAMADAS = 3;
+    public final int TAMANHO = 5;
+    public final int CAMADAS = 3;
 
     public Tabuleiro(){
         // Inicia o tabuleiro com as peças em seus locais iniciais
@@ -25,6 +27,10 @@ public class Tabuleiro {
 
     public float[][][] getTabuleiro() {
         return tabuleiro;
+    }
+
+    public Peca getPacoca(){
+        return pacoca;
     }
 
     public boolean jogar(int origemX, int origemY, int camada, int destinoX, int destinoY) {

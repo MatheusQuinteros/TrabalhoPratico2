@@ -1,4 +1,5 @@
 import java.util.List;
+import tabuleiro.Tabuleiro;
 
 public class JogoDaPacoquinha {
 
@@ -32,7 +33,7 @@ public class JogoDaPacoquinha {
 
         if (!jogada_valida) return 0;
 
-        ganhou = checador_jogo.ganhou(tabuleiro_jogo)
+        int ganhou = checador_jogo.ganhou(tabuleiro_jogo);
 
         if (ganhou !=-1) return ganhou;
 

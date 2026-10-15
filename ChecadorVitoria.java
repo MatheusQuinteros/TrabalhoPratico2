@@ -16,7 +16,7 @@ public class ChecadorVitoria {
 
             if (y == -1 || y == 5) continue;
 
-            for(int j = -1, j <= 1; j++){
+            for(int j = -1; j <= 1; j++){
                 int x = x_pacoca + j;
 
                 float casa = tabuleiro_aux[0][x][y] + tabuleiro_aux[1][x][y] + tabuleiro_aux[2][x][y];
