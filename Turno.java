@@ -15,7 +15,6 @@ public class Turno{
         return -1;
     }
 
-
     public boolean deveMoverPaçoquinha(){//retorna true caso seja verdade, e false caso contrario
         if (estadoTurno == 1|| estadoTurno == 3){
             return true;
