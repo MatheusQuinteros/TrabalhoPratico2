@@ -1,8 +1,11 @@
 /* começo de código gerado por IA - interface gráfica Java Swing. */
+package interfacegrafica;
+
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.util.function.BiConsumer;
 import javax.swing.JPanel;
+import jogo.JogoDaPacoquinha;
 
 /** Grade 5x5 de casas; repassa os cliques e redesenha a partir do estado do jogo. */
 public class PainelTabuleiro extends JPanel {

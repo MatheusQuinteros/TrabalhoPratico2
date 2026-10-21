@@ -1,4 +1,6 @@
 /* começo de código gerado por IA - interface gráfica Java Swing. */
+package interfacegrafica;
+
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;

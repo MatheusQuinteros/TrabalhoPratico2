@@ -1,4 +1,6 @@
 /* começo de código gerado por IA - interface gráfica Java Swing. */
+package interfacegrafica;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -12,6 +14,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import jogo.JogoDaPacoquinha;
 
 /** Janela do jogo: controla seleção e cliques e delega o desenho ao PainelTabuleiro. */
 public class InterfaceGrafica extends JPanel {

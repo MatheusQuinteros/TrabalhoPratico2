@@ -1,3 +1,5 @@
+package jogo;
+
 import tabuleiro.Tabuleiro;
 
 public class ChecadorVitoria {

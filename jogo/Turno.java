@@ -1,3 +1,5 @@
+package jogo;
+
 public class Turno{
     private int estadoTurno;
 
