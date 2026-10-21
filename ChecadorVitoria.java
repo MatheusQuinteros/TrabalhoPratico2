@@ -8,22 +8,29 @@ public class ChecadorVitoria {
         if (x_pacoca == 0) return 1;
         if (x_pacoca == 4) return 2;
 
-        float[][][] tabuleiro_aux = new float[tabuleiro.CAMADAS][tabuleiro.TAMANHO][tabuleiro.TAMANHO]; 
-        tabuleiro_aux = tabuleiro.getTabuleiro(); 
+        //A chamada ocorre antes de avançar o turno; após mover a paçoca,
+        // a jogadora ainda pode abrir uma saída ao mover uma peça sua. */
+        if (turno.deveMoverPaçoquinha()) return -1;
+
+        float[][][] tabuleiro_aux = tabuleiro.getTabuleiro();
 
         for (int i = -1; i <= 1; i++){
             int y = y_pacoca + i;
 
-            if (y == -1 || y == 5) continue;
+            if (y < 0 || y >= tabuleiro.TAMANHO) continue;
 
             for(int j = -1; j <= 1; j++){
                 int x = x_pacoca + j;
+
+                if (i == 0 && j == 0) continue;
+                if (x < 0 || x >= tabuleiro.TAMANHO) continue;
 
                 float casa = tabuleiro_aux[0][x][y] + tabuleiro_aux[1][x][y] + tabuleiro_aux[2][x][y];
                 if (casa == 0) return -1;
             }
         }
 
-        return (turno.getJogadorAtual() + 1) % 2;
+        // A próxima jogadora está bloqueada: vence quem acabou de mover sua peça.
+        return turno.getJogadorAtual();
     }
 }
