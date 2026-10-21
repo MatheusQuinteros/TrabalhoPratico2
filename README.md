@@ -7,7 +7,7 @@ e ambiente gráfico para abrir a janela.
 
 ```
 jogo/              lógica da partida: JogoDaPacoquinha, Turno, ChecadorVitoria
-tabuleiro/         Tabuleiro e Peca
+jogo/tabuleiro/    Tabuleiro e Peca (package jogo.tabuleiro)
 interfacegrafica/  interface Swing: InterfaceGrafica (janela), PainelTabuleiro, CasaView
 testes/            TesteJogo
 ```
@@ -17,7 +17,7 @@ testes/            TesteJogo
 Na pasta do projeto, compile e execute:
 
 ```bash
-javac -encoding UTF-8 -d out tabuleiro/*.java jogo/*.java interfacegrafica/*.java
+javac -encoding UTF-8 -d out jogo/tabuleiro/*.java jogo/*.java interfacegrafica/*.java
 java -cp out interfacegrafica.InterfaceGrafica
 ```
 

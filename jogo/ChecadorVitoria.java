@@ -1,6 +1,6 @@
 package jogo;
 
-import tabuleiro.Tabuleiro;
+import jogo.tabuleiro.Tabuleiro;
 
 public class ChecadorVitoria {
     public int ganhou(Tabuleiro tabuleiro, Turno turno) { //retorna 1 se jogador 1 ganhou, 2 se jogador 2 ganhou e -1 se nao acabou

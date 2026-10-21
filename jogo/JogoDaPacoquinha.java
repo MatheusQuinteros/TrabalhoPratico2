@@ -1,6 +1,6 @@
 package jogo;
 
-import tabuleiro.Tabuleiro;
+import jogo.tabuleiro.Tabuleiro;
 
 public class JogoDaPacoquinha {
 

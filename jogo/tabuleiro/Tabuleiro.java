@@ -1,4 +1,4 @@
-package tabuleiro;
+package jogo.tabuleiro;
 
 public class Tabuleiro {
     private float[][][] tabuleiro; //float pois é mais prática a conversão para tensor no pytorch
