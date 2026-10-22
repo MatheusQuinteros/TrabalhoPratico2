@@ -22,7 +22,7 @@ public class InterfaceGrafica extends JPanel {
     private final JLabel turno = new JLabel("", SwingConstants.CENTER);
     private final JLabel mensagem = new JLabel("", SwingConstants.CENTER);
     private final PainelTabuleiro tabuleiro = new PainelTabuleiro(this::clicar);
-    private JogoDaPacoquinha jogo = new JogoDaPacoquinha();
+    private JogoDaPacoquinha jogo = new JogoDaPacoquinha(false);
     private int[] origem;
     private int[] ultimoMovimento;
 
@@ -114,7 +114,7 @@ public class InterfaceGrafica extends JPanel {
         if (jogo.getVencedora() == -1 && JOptionPane.showConfirmDialog(this,
                 "Iniciar uma nova partida? O progresso atual será perdido.", "Nova partida",
                 JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) return;
-        jogo = new JogoDaPacoquinha();
+        jogo = new JogoDaPacoquinha(false);
         origem = null;
         ultimoMovimento = null;
         orientar();

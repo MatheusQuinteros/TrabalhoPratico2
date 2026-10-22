@@ -49,6 +49,10 @@ public class JogoDaPacoquinha {
         return 3;
     }
 
+    public float[][][] getTabuleiro(){
+        return  tabuleiro_jogo.getTabuleiro();
+    }
+
     public int getVencedora() {
         return vencedora;
     }
