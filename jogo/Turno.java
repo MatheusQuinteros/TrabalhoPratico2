@@ -3,8 +3,9 @@ package jogo;
 public class Turno{
     private int estadoTurno;
 
-    public Turno(){
-        estadoTurno = 0;
+    public Turno(Boolean treino){
+        if (!treino) estadoTurno = 0;
+        else estadoTurno = 2;
     }
 
     public int getJogadorAtual(){ //Devolve 1 caso seja vez do jogador 1, e 2 caso seja o jogador 2, se nao for nenhum dos dois, retorna -1

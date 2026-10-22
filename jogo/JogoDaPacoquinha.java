@@ -4,15 +4,15 @@ import jogo.tabuleiro.Tabuleiro;
 
 public class JogoDaPacoquinha {
 
-    private Tabuleiro tabuleiro_jogo; 
-    private Turno turno_jogo;
+    private Tabuleiro tabuleiro_jogo; // tive que tornar público por conta do treinamento
+    private Turno turno_jogo; // tive que tornar público por conta do treinamento
     private ChecadorVitoria checador_jogo;
     private int vencedora = -1;
     
-    public JogoDaPacoquinha() {
+    public JogoDaPacoquinha(boolean treinamento) {
         // Construtor: Inicializa o tabuleiro 5x5 e o estado inicial
         tabuleiro_jogo = new Tabuleiro();
-        turno_jogo = new Turno();
+        turno_jogo = new Turno(treinamento);
         checador_jogo = new ChecadorVitoria();
     }
 
