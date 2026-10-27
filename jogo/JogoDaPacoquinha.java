@@ -61,6 +61,7 @@ public class JogoDaPacoquinha {
         return turno_jogo.deveMoverPaçoquinha();
     }
 
+    // função gerada por IA para interface gráfica
     public int getCasa(int linha, int coluna) {
         float[][][] casas = tabuleiro_jogo.getTabuleiro();
         for (int camada = 0; camada < tabuleiro_jogo.CAMADAS; camada++) {
@@ -68,4 +69,5 @@ public class JogoDaPacoquinha {
         }
         return -1;
     }
+    // fim função gerada por IA
 }
