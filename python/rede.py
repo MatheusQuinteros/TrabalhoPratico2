@@ -6,8 +6,8 @@ class Rede(nn.Module):
     def __init__(self):
         super(Rede, self).__init__()
         
-        # Tronco comum: Processa o tabuleiro (3 canais * 5 * 5 = 75 entradas)
-        self.fc1 = nn.Linear(75, 128)
+        # Tronco comum: Processa o tabuleiro (3 canais * 5 * 5 = 75 entradas + 1 mover paçoca)
+        self.fc1 = nn.Linear(76, 128)
         self.fc2 = nn.Linear(128, 64)
         
         # Cabeça 1: Escolhe a peça de origem (25 casas do tabuleiro)
@@ -18,7 +18,7 @@ class Rede(nn.Module):
 
     def forward(self, x):
         # x chega como [Batch, 3, 5, 5]
-        x = x.view(x.size(0), -1) # Achata para 75
+        x = x.view(x.size(0), -1) # Achata para 76
         
         # Extração de características compartilhadas
         x = F.relu(self.fc1(x))
