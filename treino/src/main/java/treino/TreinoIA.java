@@ -1,16 +1,13 @@
 package treino;
 
-import jogo.Jogadora;
 import jogo.Turno;
-import jogo.tabuleiro.MovimentoInvalidoException;
 import jogo.tabuleiro.Tabuleiro;
 
 import java.util.ArrayList;
-import java.util.Optional;
 
 public class TreinoIA {
     private static final int TAMANHO_TAB = 4; 
-    private void jogaPartidaTreinamento() throws MovimentoInvalidoException {
+    private void jogaPartidaTreinamento(){
         JogoIA jogoP1 = new JogoIA(true); //p1 vai jogar com a perspectiva do p2
         ArrayList<float[][][]> jogadasP1= new ArrayList<>();
 
@@ -18,8 +15,8 @@ public class TreinoIA {
         ArrayList<float[][][]> jogadasP2= new ArrayList<>();
 
 
-        while (jogoOficial.terminou()){
-            if (jogoOficial.getJogadorAtual() == Jogadora.DOIS){
+        while (jogoOficial.getVencedora() != -1){
+            if (jogoOficial.getJogadorAtual() == 2){
                 int[] jogada = jogoOficial.receberJogadaIA();
                 jogoOficial.jogaRodadaPvP(jogada[0], jogada[1], jogada[2], jogada[3]);
                 jogoP1.jogaRodadaPvP(jogada[0], TAMANHO_TAB - jogada[1], jogada[2], TAMANHO_TAB - jogada[3]);
@@ -33,7 +30,7 @@ public class TreinoIA {
             }
         }
         
-        if (jogoOficial.getVencedora().equals(Optional.of(Jogadora.UM))){
+        if (jogoOficial.getVencedora() == 1){
             enviaListaJogadas(jogadasP1, true);
             enviaListaJogadas(jogadasP2, false);
         }
