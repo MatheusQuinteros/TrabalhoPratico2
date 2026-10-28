@@ -15,6 +15,8 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import jogo.JogoDaPacoquinha;
+import jogo.Jogadora;
+import jogo.tabuleiro.MovimentoInvalidoException;
 
 /** Janela do jogo: controla seleção e cliques e delega o desenho ao PainelTabuleiro. */
 public class InterfaceGrafica extends JPanel {
@@ -64,54 +66,54 @@ public class InterfaceGrafica extends JPanel {
     }
 
     private void clicar(int x, int y) {
-        if (jogo.getVencedora() != -1) return;
+        if (jogo.terminou()) return;
 
-        int camada = jogo.deveMoverPacoca() ? 0 : jogo.getJogadorAtual();
+        boolean pecaDaVez = jogo.getCasa(x, y).filter(c -> c == jogo.getCamadaDaVez()).isPresent();
         if (origem != null && origem[0] == x && origem[1] == y) {
             origem = null;
             orientar();
-        } else if (jogo.getCasa(x, y) == camada) {
+        } else if (pecaDaVez) {
             origem = new int[] {x, y};
             mensagem.setText("Agora clique na última casa livre da direção desejada.");
         } else if (origem == null) {
-            mensagem.setText(jogo.deveMoverPacoca()
+            mensagem.setText(jogo.deveMoverPacoquinha()
                     ? "Selecione a paçoquinha dourada."
-                    : "Selecione uma peça da jogadora " + jogo.getJogadorAtual() + ".");
+                    : "Selecione uma peça da jogadora " + jogo.getJogadorAtual().getNumero() + ".");
         } else {
-            int resultado = jogo.jogaRodadaPvP(origem[0], origem[1], x, y);
-            if (resultado == 0) {
-                mensagem.setText("Movimento inválido. Escolha outro destino.");
-            } else {
+            try {
+                jogo.jogaRodadaPvP(origem[0], origem[1], x, y);
                 ultimoMovimento = new int[] {origem[0], origem[1], x, y};
                 origem = null;
-                if (jogo.getVencedora() != -1) {
+                if (jogo.terminou()) {
                     mensagem.setText("Partida encerrada. Clique em Nova partida para jogar novamente.");
                 } else {
                     orientar();
                 }
+            } catch (MovimentoInvalidoException e) {
+                mensagem.setText(e.getMessage() + " Escolha outro destino.");
             }
         }
         atualizar();
     }
 
     private void orientar() {
-        mensagem.setText(jogo.deveMoverPacoca()
+        mensagem.setText(jogo.deveMoverPacoquinha()
                 ? "Selecione a paçoquinha e depois o destino."
                 : "Selecione uma peça sua e depois o destino.");
     }
 
     private void atualizar() {
-        boolean encerrada = jogo.getVencedora() != -1;
-        int jogadora = encerrada ? jogo.getVencedora() : jogo.getJogadorAtual();
-        turno.setForeground(jogadora == 1 ? CasaView.JOGADORA_1 : CasaView.JOGADORA_2);
-        turno.setText(encerrada ? "Jogadora " + jogadora + " venceu!"
-                : "Vez da jogadora " + jogadora + " · "
-                + (jogo.deveMoverPacoca() ? "mova a paçoquinha" : "mova uma peça sua"));
+        boolean encerrada = jogo.terminou();
+        Jogadora jogadora = jogo.getVencedora().orElse(jogo.getJogadorAtual());
+        turno.setForeground(CasaView.cor(jogadora));
+        turno.setText(encerrada ? "Jogadora " + jogadora.getNumero() + " venceu!"
+                : "Vez da jogadora " + jogadora.getNumero() + " · "
+                + (jogo.deveMoverPacoquinha() ? "mova a paçoquinha" : "mova uma peça sua"));
         tabuleiro.atualizar(jogo, origem, ultimoMovimento);
     }
 
     private void reiniciar() {
-        if (jogo.getVencedora() == -1 && JOptionPane.showConfirmDialog(this,
+        if (!jogo.terminou() && JOptionPane.showConfirmDialog(this,
                 "Iniciar uma nova partida? O progresso atual será perdido.", "Nova partida",
                 JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) return;
         jogo = new JogoDaPacoquinha(false);

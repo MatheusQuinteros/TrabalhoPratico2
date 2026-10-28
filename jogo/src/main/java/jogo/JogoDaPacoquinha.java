@@ -1,75 +1,71 @@
 package jogo;
 
+import java.util.Optional;
+import jogo.tabuleiro.Camada;
+import jogo.tabuleiro.MovimentoInvalidoException;
 import jogo.tabuleiro.Tabuleiro;
 
 public class JogoDaPacoquinha {
+    private final Tabuleiro tabuleiroJogo;
+    private final Turno turnoJogo;
+    private final ChecadorVitoria checadorJogo;
+    private Jogadora vencedora; // null enquanto a partida não termina
 
-    private Tabuleiro tabuleiro_jogo; // tive que tornar público por conta do treinamento
-    private Turno turno_jogo; // tive que tornar público por conta do treinamento
-    private ChecadorVitoria checador_jogo;
-    private int vencedora = -1;
-    
     public JogoDaPacoquinha(boolean treinamento) {
-        // Construtor: Inicializa o tabuleiro 5x5 e o estado inicial
-        tabuleiro_jogo = new Tabuleiro();
-        turno_jogo = new Turno(treinamento);
-        checador_jogo = new ChecadorVitoria();
+        tabuleiroJogo = new Tabuleiro();
+        turnoJogo = new Turno(treinamento);
+        checadorJogo = new ChecadorVitoria();
     }
 
-    public int jogaRodadaPvP(int origemX, int origemY, int destinoX, int destinoY){
-        if (vencedora != -1) return vencedora;
-        
-        //retorna 
-        // 0 - jogada invalida (interface deve repetir)
-        // 1 - jogada valida p1 campeao
-        // 2 - jogada valida p2 campeao
-        // 3 - jogada valida sem campeao
-        
-        boolean jogada_valida = true;
-        
-        if (turno_jogo.deveMoverPaçoquinha()){
-            jogada_valida = tabuleiro_jogo.jogar(origemX, origemY, 0, destinoX, destinoY);
+    /**
+     * Move a peça da vez (a paçoquinha ou uma peça da jogadora atual).
+     *
+     * @return a vencedora, se a jogada encerrou a partida
+     * @throws MovimentoInvalidoException se o movimento não respeita as regras; o turno não muda
+     * @throws IllegalStateException se a partida já terminou
+     */
+    public Optional<Jogadora> jogaRodadaPvP(int origemX, int origemY, int destinoX, int destinoY)
+            throws MovimentoInvalidoException {
+        if (terminou()) throw new IllegalStateException("A partida já terminou.");
+
+        tabuleiroJogo.jogar(origemX, origemY, getCamadaDaVez(), destinoX, destinoY);
+
+        Optional<Jogadora> ganhou = checadorJogo.verificar(tabuleiroJogo, turnoJogo);
+        if (ganhou.isPresent()) {
+            vencedora = ganhou.get();
+            return ganhou;
         }
 
-        else {
-           jogada_valida = tabuleiro_jogo.jogar(origemX, origemY, turno_jogo.getJogadorAtual(), destinoX, destinoY);
-        }
-
-        if (!jogada_valida) return 0;
-
-        int ganhou = checador_jogo.ganhou(tabuleiro_jogo, turno_jogo);
-
-        if (ganhou != -1) {
-            vencedora = ganhou;
-            return vencedora;
-        }
-        
-        turno_jogo.avançarTurno();
-
-        return 3;
+        turnoJogo.avancarTurno();
+        return Optional.empty();
     }
 
-    public float[][][] getTabuleiro(){
-        return  tabuleiro_jogo.getTabuleiro();
+    public float[][][] getTabuleiro() {
+        return tabuleiroJogo.getTabuleiro();
     }
 
-    public int getVencedora() {
-        return vencedora;
+    public boolean terminou() {
+        return vencedora != null;
     }
 
-    public int getJogadorAtual() {
-        return turno_jogo.getJogadorAtual();
+    public Optional<Jogadora> getVencedora() {
+        return Optional.ofNullable(vencedora);
     }
 
-    public boolean deveMoverPacoca() {
-        return turno_jogo.deveMoverPaçoquinha();
+    public Jogadora getJogadorAtual() {
+        return turnoJogo.getJogadorAtual();
     }
 
-    public int getCasa(int linha, int coluna) {
-        float[][][] casas = tabuleiro_jogo.getTabuleiro();
-        for (int camada = 0; camada < tabuleiro_jogo.CAMADAS; camada++) {
-            if (casas[camada][linha][coluna] != 0) return camada;
-        }
-        return -1;
+    public boolean deveMoverPacoquinha() {
+        return turnoJogo.deveMoverPacoquinha();
+    }
+
+    /** Camada da peça que deve ser movida agora. */
+    public Camada getCamadaDaVez() {
+        return deveMoverPacoquinha() ? Camada.PACOQUINHA : getJogadorAtual().getCamada();
+    }
+
+    public Optional<Camada> getCasa(int linha, int coluna) {
+        return tabuleiroJogo.getConteudo(linha, coluna);
     }
 }

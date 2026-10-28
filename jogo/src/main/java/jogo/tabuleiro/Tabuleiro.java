@@ -1,59 +1,72 @@
 package jogo.tabuleiro;
 
+import java.util.Optional;
+
 public class Tabuleiro {
-    private float[][][] tabuleiro; //float pois é mais prática a conversão para tensor no pytorch
-    private Peca pacoca;
+    public static final int TAMANHO = 5;
+    public static final int CAMADAS = Camada.values().length;
+    private static final float OCUPADA = 1f;
+    private static final float LIVRE = 0f;
 
-    public final int TAMANHO = 5;
-    public final int CAMADAS = 3;
+    private final float[][][] tabuleiro; // float para facilitar a conversão em tensor no PyTorch
+    private final Peca pacoca;
 
-    public Tabuleiro(){
-        // Inicia o tabuleiro com as peças em seus locais iniciais
+    public Tabuleiro() {
         tabuleiro = new float[CAMADAS][TAMANHO][TAMANHO];
 
-        this.pacoca = new Peca(2,2);
-
-        for(int i = 0; i < TAMANHO; i++){ // peças jogador 1
-            tabuleiro[1][0][i] = 1;
+        for (int coluna = 0; coluna < TAMANHO; coluna++) {
+            tabuleiro[Camada.JOGADORA_1.indice()][0][coluna] = OCUPADA;
+            tabuleiro[Camada.JOGADORA_2.indice()][TAMANHO - 1][coluna] = OCUPADA;
         }
 
-        for(int i = 0; i < TAMANHO; i++){ // peças jogador 1
-            tabuleiro[2][4][i] = 1;
-        }
-
-        tabuleiro[0][2][2] = 1; // paçoca
+        int centro = TAMANHO / 2;
+        tabuleiro[Camada.PACOQUINHA.indice()][centro][centro] = OCUPADA;
+        pacoca = new Peca(centro, centro);
     }
 
+    /** Cópia do estado atual; alterá-la não muda o tabuleiro. */
     public float[][][] getTabuleiro() {
         return copiar(tabuleiro);
     }
 
-    public Peca getPacoca(){
+    public Peca getPacoca() {
         return pacoca;
     }
 
-    public boolean jogar(int origemX, int origemY, int camada, int destinoX, int destinoY) {
-        if (camada < 0 || camada >= CAMADAS
-                || origemX < 0 || origemX >= TAMANHO
-                || origemY < 0 || origemY >= TAMANHO
-                || destinoX < 0 || destinoX >= TAMANHO
-                || destinoY < 0 || destinoY >= TAMANHO) {
-            return false;
+    /** Camada que ocupa a casa, ou vazio se a casa está livre. */
+    public Optional<Camada> getConteudo(int linha, int coluna) {
+        for (Camada camada : Camada.values()) {
+            if (tabuleiro[camada.indice()][linha][coluna] != LIVRE) return Optional.of(camada);
         }
+        return Optional.empty();
+    }
 
-        if (tabuleiro[camada][origemX][origemY] != 1) {
-            return false;
+    public boolean casaVazia(int linha, int coluna) {
+        return getConteudo(linha, coluna).isEmpty();
+    }
+
+    public static boolean dentroDoTabuleiro(int linha, int coluna) {
+        return linha >= 0 && linha < TAMANHO && coluna >= 0 && coluna < TAMANHO;
+    }
+
+    public void jogar(int origemX, int origemY, Camada camada, int destinoX, int destinoY)
+            throws MovimentoInvalidoException {
+        if (!dentroDoTabuleiro(origemX, origemY) || !dentroDoTabuleiro(destinoX, destinoY)) {
+            throw new MovimentoInvalidoException("A posição está fora do tabuleiro.");
+        }
+        if (tabuleiro[camada.indice()][origemX][origemY] != OCUPADA) {
+            throw new MovimentoInvalidoException("A casa de origem não tem a peça que deve ser movida.");
         }
 
         int deslocamentoX = destinoX - origemX;
         int deslocamentoY = destinoY - origemY;
 
         if (deslocamentoX == 0 && deslocamentoY == 0) {
-            return false;
+            throw new MovimentoInvalidoException("O destino precisa ser diferente da origem.");
         }
         if (deslocamentoX != 0 && deslocamentoY != 0
                 && Math.abs(deslocamentoX) != Math.abs(deslocamentoY)) {
-            return false;
+            throw new MovimentoInvalidoException("O movimento deve ser em linha reta ou diagonal.");
         }
 
         int passoX = Integer.signum(deslocamentoX);
@@ -62,60 +75,33 @@ public class Tabuleiro {
         int ultimoY = origemY;
 
         // Encontra a última casa vazia antes de uma peça ou da borda.
-        while (true) {
-            int proximoX = ultimoX + passoX;
-            int proximoY = ultimoY + passoY;
-
-            if (proximoX < 0 || proximoX >= TAMANHO
-                    || proximoY < 0 || proximoY >= TAMANHO) {
-                break;
-            }
-
-            boolean ocupada = false;
-            for (int c = 0; c < CAMADAS; c++) {
-                if (tabuleiro[c][proximoX][proximoY] != 0) {
-                    ocupada = true;
-                    break;
-                }
-            }
-            if (ocupada) {
-                break;
-            }
-
-            ultimoX = proximoX;
-            ultimoY = proximoY;
+        while (dentroDoTabuleiro(ultimoX + passoX, ultimoY + passoY)
+                && casaVazia(ultimoX + passoX, ultimoY + passoY)) {
+            ultimoX += passoX;
+            ultimoY += passoY;
         }
 
         if (destinoX != ultimoX || destinoY != ultimoY) {
-            return false;
+            throw new MovimentoInvalidoException("A peça deve ir até a última casa livre nessa direção.");
         }
 
-        tabuleiro[camada][origemX][origemY] = 0;
-        tabuleiro[camada][destinoX][destinoY] = 1;
+        tabuleiro[camada.indice()][origemX][origemY] = LIVRE;
+        tabuleiro[camada.indice()][destinoX][destinoY] = OCUPADA;
 
-        if (camada == 0) {
-            if (pacoca == null) {
-                // Alteração por IA: compatível com o construtor Peca(int, int).
-                pacoca = new Peca(destinoX, destinoY);
-            }
-            pacoca.x = destinoX;
-            pacoca.y = destinoY;
-        }
-
-        return true;
-    }
-
-    public static float[][][] copiar(float[][][] original) { //copia o tabuleiro para não alterar o original
-    float[][][] copia = new float[original.length][][];
-    for (int c = 0; c < original.length; c++) {
-        copia[c] = new float[original[c].length][];
-        for (int l = 0; l < original[c].length; l++) {
-            copia[c][l] = new float[original[c][l].length];
-            for (int k = 0; k < original[c][l].length; k++) {
-                copia[c][l][k] = original[c][l][k];
-            }
+        if (camada == Camada.PACOQUINHA) {
+            pacoca.moverPara(destinoX, destinoY);
         }
     }
-    return copia;
-}
+
+    /** Copia o tabuleiro para não alterar o original. */
+    public static float[][][] copiar(float[][][] original) {
+        float[][][] copia = new float[original.length][][];
+        for (int c = 0; c < original.length; c++) {
+            copia[c] = new float[original[c].length][];
+            for (int l = 0; l < original[c].length; l++) {
+                copia[c][l] = original[c][l].clone();
+            }
+        }
+        return copia;
+    }
 }

@@ -1,31 +1,43 @@
 package jogo;
 
-public class Turno{
-    private int estadoTurno;
+public class Turno {
+    /** Fases do turno, na ordem em que acontecem. */
+    private enum Fase {
+        JOGADORA_2_MOVE_PECA(Jogadora.DOIS, false),
+        JOGADORA_1_MOVE_PACOQUINHA(Jogadora.UM, true),
+        JOGADORA_1_MOVE_PECA(Jogadora.UM, false),
+        JOGADORA_2_MOVE_PACOQUINHA(Jogadora.DOIS, true);
 
-    public Turno(Boolean treino){
-        if (!treino) estadoTurno = 0;
-        else estadoTurno = 2;
+        private final Jogadora jogadora;
+        private final boolean movePacoquinha;
+
+        Fase(Jogadora jogadora, boolean movePacoquinha) {
+            this.jogadora = jogadora;
+            this.movePacoquinha = movePacoquinha;
+        }
+
+        Fase proxima() {
+            Fase[] fases = values();
+            return fases[(ordinal() + 1) % fases.length];
+        }
     }
 
-    public int getJogadorAtual(){ //Devolve 1 caso seja vez do jogador 1, e 2 caso seja o jogador 2, se nao for nenhum dos dois, retorna -1
-        if (estadoTurno==1||estadoTurno==2){
-            return 1;
-        }
-        if (estadoTurno==3||estadoTurno==0){
-            return 2;
-        }
-        return -1;
+    private Fase fase;
+
+    /** No treino a partida começa com a jogadora 1 movendo uma peça. */
+    public Turno(boolean treino) {
+        fase = treino ? Fase.JOGADORA_1_MOVE_PECA : Fase.JOGADORA_2_MOVE_PECA;
     }
 
-    public boolean deveMoverPaçoquinha(){//retorna true caso seja verdade, e false caso contrario
-        if (estadoTurno == 1|| estadoTurno == 3){
-            return true;
-        }
-        return false;
+    public Jogadora getJogadorAtual() {
+        return fase.jogadora;
     }
 
-    public void avançarTurno(){// avança a jogada
-        estadoTurno = (estadoTurno + 1) % 4;
+    public boolean deveMoverPacoquinha() {
+        return fase.movePacoquinha;
+    }
+
+    public void avancarTurno() {
+        fase = fase.proxima();
     }
 }

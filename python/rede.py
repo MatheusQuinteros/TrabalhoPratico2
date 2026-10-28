@@ -6,8 +6,8 @@ class Rede(nn.Module):
     def __init__(self):
         super(Rede, self).__init__()
         
-        # Tronco comum: Processa o tabuleiro (3 canais * 5 * 5 = 75 entradas)
-        self.fc1 = nn.Linear(75, 128)
+        # Tronco comum: Processa o tabuleiro (3 canais * 5 * 5 = 75 entradas + 1 entrada para ver se eh jogador ou paçoca)
+        self.fc1 = nn.Linear(76, 128)
         self.fc2 = nn.Linear(128, 64)
         
         # Cabeça 1: Escolhe a peça de origem (25 casas do tabuleiro)
