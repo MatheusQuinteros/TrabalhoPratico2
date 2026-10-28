@@ -25,7 +25,7 @@ public class Tabuleiro {
     }
 
     public float[][][] getTabuleiro() {
-        return tabuleiro;
+        return copiar(tabuleiro);
     }
 
     public Peca getPacoca(){
@@ -104,4 +104,18 @@ public class Tabuleiro {
 
         return true;
     }
+
+    public static float[][][] copiar(float[][][] original) { //copia o tabuleiro para não alterar o original
+    float[][][] copia = new float[original.length][][];
+    for (int c = 0; c < original.length; c++) {
+        copia[c] = new float[original[c].length][];
+        for (int l = 0; l < original[c].length; l++) {
+            copia[c][l] = new float[original[c][l].length];
+            for (int k = 0; k < original[c][l].length; k++) {
+                copia[c][l][k] = original[c][l][k];
+            }
+        }
+    }
+    return copia;
+}
 }

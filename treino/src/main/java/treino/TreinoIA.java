@@ -1,4 +1,4 @@
-package ia;
+package treino;
 
 import jogo.Turno;
 import jogo.tabuleiro.Tabuleiro;

@@ -1,4 +1,4 @@
-package ia;
+package treino;
 import jogo.JogoDaPacoquinha;
 
 public class JogoIA extends JogoDaPacoquinha{
