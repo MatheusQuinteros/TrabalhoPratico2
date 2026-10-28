@@ -1,15 +1,19 @@
 # Jogo da Paçoquinha
 
-Interface gráfica em Java Swing, sem dependências externas. Requer JDK 8 ou superior
+Projeto Maven em Java 21 com interface Swing. Requer JDK 21, Apache Maven 3.8+
 e ambiente gráfico para abrir a janela.
 
 ## Estrutura
 
 ```
-jogo/              lógica da partida: JogoDaPacoquinha, Turno, ChecadorVitoria
-jogo/tabuleiro/    Tabuleiro e Peca (package jogo.tabuleiro)
-interfacegrafica/  interface Swing: InterfaceGrafica (janela), PainelTabuleiro, CasaView
-testes/            TesteJogo
+pom.xml
+src/main/java/
+  jogo/              lógica da partida: JogoDaPacoquinha, Turno, ChecadorVitoria
+  jogo/tabuleiro/    Tabuleiro e Peca (package jogo.tabuleiro)
+  interfacegrafica/  interface Swing: InterfaceGrafica (janela), PainelTabuleiro, CasaView
+  ia/                oponente com IA: JogoIA e TreinoIA
+src/test/java/       testes JUnit 5
+ia/python/           rede neural em PyTorch (treino fora do Maven)
 ```
 
 ## Execução
@@ -17,8 +21,14 @@ testes/            TesteJogo
 Na pasta do projeto, compile e execute:
 
 ```bash
-javac -encoding UTF-8 -d out jogo/tabuleiro/*.java jogo/*.java interfacegrafica/*.java
-java -cp out interfacegrafica.InterfaceGrafica
+mvn compile exec:java
+```
+
+Para gerar um `.jar` executável:
+
+```bash
+mvn package
+java -jar target/jogo-da-pacoquinha-1.0-SNAPSHOT.jar
 ```
 
 Selecione a peça e depois a casa de destino. A mensagem no topo indica a jogadora
@@ -34,12 +44,10 @@ própria deixando a paçoquinha sem saída vence por bloqueio da próxima jogado
 ## Testes
 
 ```bash
-javac -encoding UTF-8 -cp out -d out testes/TesteJogo.java
-java -Djava.awt.headless=true -cp out testes.TesteJogo
+mvn test
 ```
 
-Os testes cobrem as fases do turno, vitória por chegada e bloqueio, preservação
-do estado após o encerramento e cliques da interface. Podem rodar sem monitor.
+Os testes JUnit 5 ficam em `src/test/java` e rodam sem monitor.
 
 As alterações das correções 3 e 4 e os trechos produzidos por IA estão identificados
 por comentários nos arquivos Java.
