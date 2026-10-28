@@ -6,6 +6,7 @@ import jogo.tabuleiro.Tabuleiro;
 import java.util.ArrayList;
 
 public class TreinoIA {
+    private static final int TAMANHO_TAB = 4; 
     private void jogaPartidaTreinamento(){
         JogoIA jogoP1 = new JogoIA(true); //p1 vai jogar com a perspectiva do p2
         ArrayList<float[][][]> jogadasP1= new ArrayList<>();
@@ -18,13 +19,13 @@ public class TreinoIA {
             if (jogoOficial.getJogadorAtual() == 2){
                 int[] jogada = jogoOficial.receberJogadaIA();
                 jogoOficial.jogaRodadaPvP(jogada[0], jogada[1], jogada[2], jogada[3]);
-                jogoP1.jogaRodadaPvP(jogada[0], jogada[1], jogada[2], jogada[3]);
+                jogoP1.jogaRodadaPvP(jogada[0], TAMANHO_TAB - jogada[1], jogada[2], TAMANHO_TAB - jogada[3]);
                 jogadasP2.add(jogoOficial.getTabuleiro());
             }
             else{
                 int[] jogada = jogoP1.receberJogadaIA();
                 jogoOficial.jogaRodadaPvP(jogada[0], jogada[1], jogada[2], jogada[3]);
-                jogoP1.jogaRodadaPvP(jogada[0], jogada[1], jogada[2], jogada[3]);
+                jogoP1.jogaRodadaPvP(jogada[0], TAMANHO_TAB - jogada[1], jogada[2], TAMANHO_TAB - jogada[3]);
                 jogadasP1.add(jogoP1.getTabuleiro());
             }
         }

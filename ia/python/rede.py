@@ -2,9 +2,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-class RedeUnificadaPacoquinha(nn.Module):
+class Rede(nn.Module):
     def __init__(self):
-        super(RedeUnificadaPacoquinha, self).__init__()
+        super(Rede, self).__init__()
         
         # Tronco comum: Processa o tabuleiro (3 canais * 5 * 5 = 75 entradas)
         self.fc1 = nn.Linear(75, 128)
