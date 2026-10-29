@@ -43,7 +43,6 @@ public class TreinoIA {
     }
 
     private void enviaListaJogadas(ArrayList<PassoTreinamento> listaJogadas){
-        ...
     }
 
     public static void main(String[] args) {

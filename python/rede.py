@@ -17,8 +17,7 @@ class Rede(nn.Module):
         self.saida_destino = nn.Linear(64, 25)
 
     def forward(self, x):
-        # x chega como [Batch, 3, 5, 5]
-        x = x.view(x.size(0), -1) # Achata para 76
+        # x já chega com 76 entradas (75 do tabuleiro + 1 do paçoca)
         
         # Extração de características compartilhadas
         x = F.relu(self.fc1(x))
