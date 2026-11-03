@@ -3,8 +3,8 @@ package jogo;
 public class Turno{
     private int estadoTurno;
 
-    public Turno(Boolean treino){
-        if (!treino) estadoTurno = 0;
+    public Turno(Boolean treinoP1){
+        if (!treinoP1) estadoTurno = 0;
         else estadoTurno = 2;
     }
 

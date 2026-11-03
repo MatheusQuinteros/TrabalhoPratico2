@@ -14,7 +14,11 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
+import ai.onnxruntime.OrtException;
 import jogo.JogoDaPacoquinha;
+import jogo.JogoIA;
+import jogo.IA;
 
 /** Janela do jogo: controla seleção e cliques e delega o desenho ao PainelTabuleiro. */
 public class InterfaceGrafica extends JPanel {
@@ -25,6 +29,7 @@ public class InterfaceGrafica extends JPanel {
     private JogoDaPacoquinha jogo = new JogoDaPacoquinha(false);
     private int[] origem;
     private int[] ultimoMovimento;
+    private boolean pensando;
 
     public InterfaceGrafica() {
         super(new BorderLayout(0, 16));
@@ -55,16 +60,23 @@ public class InterfaceGrafica extends JPanel {
                 + "</div></html>", SwingConstants.CENTER);
         regras.setForeground(CasaView.TEXTO);
         rodape.add(regras, BorderLayout.CENTER);
+        JPanel botoes = new JPanel(new GridLayout(1, 2, 8, 0));
+        botoes.setOpaque(false);
         JButton reiniciar = new JButton("Nova partida");
-        reiniciar.addActionListener(e -> reiniciar());
-        rodape.add(reiniciar, BorderLayout.SOUTH);
+        reiniciar.addActionListener(e -> reiniciar(false));
+        JButton contraIA = new JButton("Jogar contra IA");
+        contraIA.addActionListener(e -> reiniciar(true));
+        botoes.add(reiniciar);
+        botoes.add(contraIA);
+        rodape.add(botoes, BorderLayout.SOUTH);
         add(rodape, BorderLayout.SOUTH);
         atualizar();
         orientar();
     }
 
     private void clicar(int x, int y) {
-        if (jogo.getVencedora() != -1) return;
+        if (pensando || jogo.getVencedora() != -1) return;
+        if (jogo instanceof JogoIA && jogo.getJogadorAtual() != 1) return;
 
         int camada = jogo.deveMoverPacoca() ? 0 : jogo.getJogadorAtual();
         if (origem != null && origem[0] == x && origem[1] == y) {
@@ -78,7 +90,16 @@ public class InterfaceGrafica extends JPanel {
                     ? "Selecione a paçoquinha dourada."
                     : "Selecione uma peça da jogadora " + jogo.getJogadorAtual() + ".");
         } else {
-            int resultado = jogo.jogaRodadaPvP(origem[0], origem[1], x, y);
+            int resultado;
+            try {
+                resultado = jogo instanceof JogoIA jogoIA
+                        ? jogoIA.jogaRodadaPvIA(origem[0], origem[1], x, y)
+                        : jogo.jogaRodadaPvP(origem[0], origem[1], x, y);
+            } catch (OrtException ex) {
+                mensagem.setText("Não foi possível executar a IA: " + ex.getMessage());
+                atualizar();
+                return;
+            }
             if (resultado == 0) {
                 mensagem.setText("Movimento inválido. Escolha outro destino.");
             } else {
@@ -86,6 +107,8 @@ public class InterfaceGrafica extends JPanel {
                 origem = null;
                 if (jogo.getVencedora() != -1) {
                     mensagem.setText("Partida encerrada. Clique em Nova partida para jogar novamente.");
+                } else if (jogo instanceof JogoIA && jogo.getJogadorAtual() == 2) {
+                    executarJogadaIA();
                 } else {
                     orientar();
                 }
@@ -105,20 +128,71 @@ public class InterfaceGrafica extends JPanel {
         int jogadora = encerrada ? jogo.getVencedora() : jogo.getJogadorAtual();
         turno.setForeground(jogadora == 1 ? CasaView.JOGADORA_1 : CasaView.JOGADORA_2);
         turno.setText(encerrada ? "Jogadora " + jogadora + " venceu!"
-                : "Vez da jogadora " + jogadora + " · "
+                : (pensando ? "A IA está pensando… · " : "Vez da jogadora " + jogadora + " · ")
                 + (jogo.deveMoverPacoca() ? "mova a paçoquinha" : "mova uma peça sua"));
         tabuleiro.atualizar(jogo, origem, ultimoMovimento);
     }
 
-    private void reiniciar() {
+    private void reiniciar(boolean contraIA) {
+        if (pensando) return;
         if (jogo.getVencedora() == -1 && JOptionPane.showConfirmDialog(this,
                 "Iniciar uma nova partida? O progresso atual será perdido.", "Nova partida",
                 JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) return;
-        jogo = new JogoDaPacoquinha(false);
+        if (jogo instanceof JogoIA jogoIA) jogoIA.close();
+        if (contraIA) {
+            try {
+                jogo = new JogoIA(false, new IA());
+            } catch (OrtException ex) {
+                jogo = new JogoDaPacoquinha(false);
+                JOptionPane.showMessageDialog(this,
+                        "Não foi possível carregar " + IA.CAMINHO_MODELO + ". Gere o modelo ONNX primeiro.\n"
+                                + ex.getMessage(), "Erro ao carregar IA", JOptionPane.ERROR_MESSAGE);
+            }
+        } else {
+            jogo = new JogoDaPacoquinha(false);
+        }
         origem = null;
         ultimoMovimento = null;
+        pensando = false;
         orientar();
         atualizar();
+        if (jogo instanceof JogoIA && jogo.getJogadorAtual() == 2) executarJogadaIA();
+    }
+
+    private void executarJogadaIA() {
+        if (!(jogo instanceof JogoIA jogoIA) || pensando || jogo.getVencedora() != -1) return;
+        pensando = true;
+        origem = null;
+        atualizar();
+        new SwingWorker<Integer, Void>() {
+            @Override
+            protected Integer doInBackground() throws Exception {
+                return jogoIA.jogaRodadaPvIA(0, 0, 0, 0);
+            }
+
+            @Override
+            protected void done() {
+                pensando = false;
+                try {
+                    int resultado = get();
+                    if (resultado == 0) {
+                        mensagem.setText("A IA tentou um movimento inválido; confira o modelo e as regras.");
+                    } else if (jogo.getVencedora() != -1) {
+                        mensagem.setText("Partida encerrada. Clique em Nova partida para jogar novamente.");
+                    } else if (jogo.getJogadorAtual() == 2) {
+                        atualizar();
+                        executarJogadaIA();
+                        return;
+                    } else {
+                        orientar();
+                    }
+                } catch (Exception ex) {
+                    Throwable causa = ex.getCause() == null ? ex : ex.getCause();
+                    mensagem.setText("Erro na jogada da IA: " + causa.getMessage());
+                }
+                atualizar();
+            }
+        }.execute();
     }
 
     public static void main(String[] args) {

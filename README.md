@@ -1,7 +1,18 @@
 # Jogo da Paçoquinha
 
 Projeto Maven em Java 21 com interface Swing. Requer JDK 21, Apache Maven 3.8+
-e ambiente gráfico para abrir a janela.
+e ambiente gráfico para abrir a janela. Confira as versões no terminal:
+
+```bash
+java -version
+javac -version
+mvn -version
+```
+
+O comando `mvn -version` informa qual Java o próprio Maven está usando; ele
+também precisa apontar para o JDK 21. Se a compilação informar `release version
+21 not supported`, o Maven está usando um JDK antigo. Ajuste `JAVA_HOME` e o
+`PATH` para o JDK 21 e abra um terminal novo.
 
 ## Estrutura
 
@@ -60,19 +71,26 @@ O Java joga as partidas de treino e grava o gabarito; o Python treina a rede e
 exporta os pesos que o Java usa na inferência.
 
 ```bash
-mvn install
+mvn -P treino install -DskipTests
 mvn -f treino/pom.xml compile exec:java
 ```
 
-O primeiro comando instala o módulo do jogo no repositório local do Maven; o
-segundo compila e roda só o treino. Para compilar os dois módulos juntos (por
-exemplo, no VS Code), use o perfil `treino`: `mvn -P treino compile`.
+O primeiro comando compila os módulos e instala o jogo no repositório local do
+Maven; o segundo compila e roda só o treino. O perfil `treino` inclui o módulo
+de treino no build. Para compilar os dois módulos juntos sem instalar o jogo,
+use `mvn -P treino compile`.
 
 Parte em Python:
 
 ```bash
 pip install -r python/requirements.txt
+python python/ciclo_treino.py
 ```
+
+O ciclo executa as partidas Java e treina a rede em Python (100 iterações de 50
+partidas por padrão). O arquivo ONNX usado pelo jogo é gerado em
+`jogo/modelo_pacoquinha.onnx`; os pesos retomáveis (`.pth`) e os dados ficam em
+`python/`.
 
 As alterações das correções 3 e 4 e os trechos produzidos por IA estão identificados
 por comentários nos arquivos Java.

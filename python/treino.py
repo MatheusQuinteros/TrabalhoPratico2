@@ -10,7 +10,8 @@ from rede import Rede
 PASTA = os.path.dirname(os.path.abspath(__file__))
 CAMINHO_JSON = os.path.join(PASTA, "jogadas_vencedor.json")
 CAMINHO_PESOS = os.path.join(PASTA, "modelo_pacoquinha.pth")
-CAMINHO_ONNX = os.path.join(PASTA, "modelo_pacoquinha.onnx")
+# O ONNX é consumido pelo jogo; mantenha os pesos de treino e os dados em python/.
+CAMINHO_ONNX = os.path.join(os.path.dirname(PASTA), "jogo", "modelo_pacoquinha.onnx")
 
 def treinarLote(rede, otimizador, funcao_perda, inputs_tabuleiros, targets_pecas, targets_destinos):
     if inputs_tabuleiros.size(0) == 0:

@@ -10,7 +10,7 @@ import ai.onnxruntime.OrtSession;
 
 //classe criada por IA responsável por fazer a inferência do modelo onnx e escolher a jogada
 public class IA implements AutoCloseable {
-    public static final String CAMINHO_MODELO = "python/modelo_pacoquinha.onnx";
+    public static final String CAMINHO_MODELO = "jogo/modelo_pacoquinha.onnx";
     private static final int TAMANHO = 5;
     private static final int ENTRADAS = 3 * TAMANHO * TAMANHO + 1;
 
