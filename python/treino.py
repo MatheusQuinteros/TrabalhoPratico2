@@ -84,6 +84,15 @@ def lerTabuleiros(caminho_json=CAMINHO_JSON):
 
     return inputs_tabuleiros, targets_pecas, targets_destinos
 
+def carregarPesos(rede, caminho_pesos=CAMINHO_PESOS):
+    """Carrega os pesos salvos, se existirem e forem da mesma arquitetura da rede."""
+    if not os.path.exists(caminho_pesos):
+        return
+    try:
+        rede.load_state_dict(torch.load(caminho_pesos))
+    except RuntimeError:
+        print(f"Aviso: {caminho_pesos} é de outra arquitetura de rede, começando do zero.")
+
 def exportarOnnx(rede, caminho_onnx=CAMINHO_ONNX):
     """Exporta a rede para ONNX, formato lido pela classe IA no Java."""
     rede.eval()
@@ -101,8 +110,7 @@ def exportarOnnx(rede, caminho_onnx=CAMINHO_ONNX):
 if __name__ == "__main__":
     # Instancia a rede, otimizador e perda fora do loop
     rede = Rede()
-    if os.path.exists(CAMINHO_PESOS):
-        rede.load_state_dict(torch.load(CAMINHO_PESOS))
+    carregarPesos(rede)
     otimizador = optim.Adam(rede.parameters(), lr=0.001)
     funcao_perda = nn.CrossEntropyLoss()
 

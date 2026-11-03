@@ -10,7 +10,7 @@ import torch.nn as nn
 import torch.optim as optim
 
 from rede import Rede
-from treino import CAMINHO_PESOS, PASTA, exportarOnnx, lerTabuleiros, treinarLote
+from treino import CAMINHO_PESOS, PASTA, carregarPesos, exportarOnnx, lerTabuleiros, treinarLote
 
 RAIZ = os.path.dirname(PASTA)  # os caminhos do Java são relativos à raiz do repositório
 PASTA_MODELOS = os.path.join(PASTA, "modelos")
@@ -49,8 +49,7 @@ if __name__ == "__main__":
 
     # Rede e otimizador ficam em memória durante todo o loop
     rede = Rede()
-    if os.path.exists(CAMINHO_PESOS):
-        rede.load_state_dict(torch.load(CAMINHO_PESOS))
+    carregarPesos(rede)
     otimizador = optim.Adam(rede.parameters(), lr=0.001)
     funcao_perda = nn.CrossEntropyLoss()
 
