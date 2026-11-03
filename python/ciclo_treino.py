@@ -13,6 +13,7 @@ from rede import Rede
 from treino import CAMINHO_PESOS, PASTA, exportarOnnx, lerTabuleiros, treinarLote
 
 RAIZ = os.path.dirname(PASTA)  # os caminhos do Java são relativos à raiz do repositório
+PASTA_MODELOS = os.path.join(PASTA, "modelos")
 
 
 def montarClasspath():
@@ -34,9 +35,13 @@ def montarClasspath():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--iteracoes", type=int, default=100)
+    parser.add_argument("--iteracoes", type=int, default=4000)
     parser.add_argument("--partidas", type=int, default=50, help="partidas jogadas pelo Java por iteração")
+    parser.add_argument("--salvar-a-cada", type=int, default=500,
+                        help="intervalo de iterações entre checkpoints")
     args = parser.parse_args()
+    if args.iteracoes < 1 or args.partidas < 1 or args.salvar_a_cada < 1:
+        parser.error("--iteracoes, --partidas e --salvar-a-cada devem ser maiores que zero")
 
     warnings.filterwarnings("ignore", category=DeprecationWarning)
 
@@ -60,11 +65,19 @@ if __name__ == "__main__":
         inputs, t_pecas, t_destinos = lerTabuleiros()
         if inputs is None:
             print(f"Iteração {iteracao}: nenhuma partida com vencedor, sem treino", flush=True)
-            continue
+        else:
+            rede.train()
+            loss = treinarLote(rede, otimizador, funcao_perda, inputs, t_pecas, t_destinos)
+            print(f"Iteração {iteracao}: loss {loss:.4f}", flush=True)
 
-        rede.train()
-        loss = treinarLote(rede, otimizador, funcao_perda, inputs, t_pecas, t_destinos)
-        print(f"Iteração {iteracao}: loss {loss:.4f}", flush=True)
+            torch.save(rede.state_dict(), CAMINHO_PESOS)
+            exportarOnnx(rede)
 
-        torch.save(rede.state_dict(), CAMINHO_PESOS)
-        exportarOnnx(rede)
+        if iteracao % args.salvar_a_cada == 0:
+            os.makedirs(PASTA_MODELOS, exist_ok=True)
+            nome = f"modelo_pacoquinha_iteracao_{iteracao:04d}"
+            caminho_pesos = os.path.join(PASTA_MODELOS, nome + ".pth")
+            caminho_onnx = os.path.join(PASTA_MODELOS, nome + ".onnx")
+            torch.save(rede.state_dict(), caminho_pesos)
+            exportarOnnx(rede, caminho_onnx)
+            print(f"Checkpoint salvo: {caminho_pesos} e {caminho_onnx}", flush=True)

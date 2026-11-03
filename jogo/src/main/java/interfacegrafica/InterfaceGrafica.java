@@ -138,7 +138,14 @@ public class InterfaceGrafica extends JPanel {
         if (jogo.getVencedora() == -1 && JOptionPane.showConfirmDialog(this,
                 "Iniciar uma nova partida? O progresso atual será perdido.", "Nova partida",
                 JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) return;
-        if (jogo instanceof JogoIA jogoIA) jogoIA.close();
+        if (jogo instanceof JogoIA jogoIA) {
+            try {
+                jogoIA.close();
+            } catch (OrtException ex) {
+                // Uma falha ao liberar a sessão antiga não deve impedir uma nova partida.
+                mensagem.setText("Aviso: não foi possível liberar a sessão anterior da IA.");
+            }
+        }
         if (contraIA) {
             try {
                 jogo = new JogoIA(false, new IA());

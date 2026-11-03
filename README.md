@@ -87,10 +87,11 @@ pip install -r python/requirements.txt
 python python/ciclo_treino.py
 ```
 
-O ciclo executa as partidas Java e treina a rede em Python (100 iterações de 50
-partidas por padrão). O arquivo ONNX usado pelo jogo é gerado em
-`jogo/modelo_pacoquinha.onnx`; os pesos retomáveis (`.pth`) e os dados ficam em
-`python/`.
+O ciclo executa as partidas Java e treina a rede em Python (4.000 iterações de 50
+partidas por padrão). A cada 500 iterações, salva checkpoints `.pth` e `.onnx`
+em `python/modelos/`, identificados pelo número da iteração. O arquivo ONNX
+usado pelo jogo continua sendo atualizado em `jogo/modelo_pacoquinha.onnx`; os
+pesos retomáveis (`.pth`) e os dados de treino ficam em `python/`.
 
 As alterações das correções 3 e 4 e os trechos produzidos por IA estão identificados
 por comentários nos arquivos Java.

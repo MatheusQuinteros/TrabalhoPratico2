@@ -21,7 +21,7 @@ public class JogoIA extends JogoDaPacoquinha implements AutoCloseable {
     }
 
     @Override
-    public void close() {
+    public void close() throws OrtException {
         ia.close();
     }
 }
