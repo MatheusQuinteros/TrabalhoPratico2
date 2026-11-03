@@ -65,6 +65,10 @@ public class JogoDaPacoquinha {
         return turno_jogo.deveMoverPaçoquinha();
     }
 
+    public boolean[] destinosValidos(int linha, int coluna) {
+        return tabuleiro_jogo.destinosValidos(linha, coluna);
+    }
+
     public int getCasa(int linha, int coluna) {
         float[][][] casas = tabuleiro_jogo.getTabuleiro();
         for (int camada = 0; camada < tabuleiro_jogo.CAMADAS; camada++) {

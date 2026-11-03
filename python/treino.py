@@ -1,10 +1,16 @@
 import json
+import os
 import numpy as np
 import torch
 import torch.optim as optim
 import torch.nn as nn
 
 from rede import Rede
+
+PASTA = os.path.dirname(os.path.abspath(__file__))
+CAMINHO_JSON = os.path.join(PASTA, "jogadas_vencedor.json")
+CAMINHO_PESOS = os.path.join(PASTA, "modelo_pacoquinha.pth")
+CAMINHO_ONNX = os.path.join(PASTA, "modelo_pacoquinha.onnx")
 
 def treinarLote(rede, otimizador, funcao_perda, inputs_tabuleiros, targets_pecas, targets_destinos):
     if inputs_tabuleiros.size(0) == 0:
@@ -26,7 +32,7 @@ def treinarLote(rede, otimizador, funcao_perda, inputs_tabuleiros, targets_pecas
 
     return loss_total.item()
 
-def lerTabuleiros(caminho_json="jogadas_vencedor.json"):
+def lerTabuleiros(caminho_json=CAMINHO_JSON):
     """Lê o arquivo JSON gerado pelo Java, formata os dados e retorna
 
     os tensores prontos para o treinamento com a Rede de 76 entradas.
@@ -77,19 +83,37 @@ def lerTabuleiros(caminho_json="jogadas_vencedor.json"):
 
     return inputs_tabuleiros, targets_pecas, targets_destinos
 
+def exportarOnnx(rede, caminho_onnx=CAMINHO_ONNX):
+    """Exporta a rede para ONNX, formato lido pela classe IA no Java."""
+    rede.eval()
+    torch.onnx.export(
+        rede,
+        torch.zeros(1, 76),
+        caminho_onnx,
+        input_names=["entrada"],
+        output_names=["logits_peca", "logits_destino"],
+        dynamic_axes={"entrada": {0: "lote"}},
+        dynamo=False,
+    )
+
 # ==========================================
 if __name__ == "__main__":
     # Instancia a rede, otimizador e perda fora do loop
     rede = Rede()
+    if os.path.exists(CAMINHO_PESOS):
+        rede.load_state_dict(torch.load(CAMINHO_PESOS))
     otimizador = optim.Adam(rede.parameters(), lr=0.001)
     funcao_perda = nn.CrossEntropyLoss()
 
     inputs, t_pecas, t_destinos = lerTabuleiros()
 
     if inputs is not None:
+        rede.train()
         loss = treinarLote(
             rede, otimizador, funcao_perda, inputs, t_pecas, t_destinos
         )
         print(f"Loss Total: {loss:.4f}")
 
-        torch.save(rede.state_dict(), "modelo_pacoquinha.pth")
+    # Salva sempre, para que a primeira execução gere o modelo inicial
+    torch.save(rede.state_dict(), CAMINHO_PESOS)
+    exportarOnnx(rede)

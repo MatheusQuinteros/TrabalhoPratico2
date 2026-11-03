@@ -56,8 +56,45 @@ public class Tabuleiro {
             return false;
         }
 
-        int passoX = Integer.signum(deslocamentoX);
-        int passoY = Integer.signum(deslocamentoY);
+        int[] ultima = ultimaCasaLivre(origemX, origemY,
+                Integer.signum(deslocamentoX), Integer.signum(deslocamentoY));
+
+        if (destinoX != ultima[0] || destinoY != ultima[1]) {
+            return false;
+        }
+
+        tabuleiro[camada][origemX][origemY] = 0;
+        tabuleiro[camada][destinoX][destinoY] = 1;
+
+        if (camada == 0) {
+            if (pacoca == null) {
+                // Alteração por IA: compatível com o construtor Peca(int, int).
+                pacoca = new Peca(destinoX, destinoY);
+            }
+            pacoca.x = destinoX;
+            pacoca.y = destinoY;
+        }
+
+        return true;
+    }
+
+    public boolean[] destinosValidos(int origemX, int origemY) {
+        // Índice linear linha * TAMANHO + coluna, igual ao usado no treino em Python
+        boolean[] destinos = new boolean[TAMANHO * TAMANHO];
+        for (int passoX = -1; passoX <= 1; passoX++) {
+            for (int passoY = -1; passoY <= 1; passoY++) {
+                if (passoX == 0 && passoY == 0) continue;
+
+                int[] ultima = ultimaCasaLivre(origemX, origemY, passoX, passoY);
+                if (ultima[0] != origemX || ultima[1] != origemY) {
+                    destinos[ultima[0] * TAMANHO + ultima[1]] = true;
+                }
+            }
+        }
+        return destinos;
+    }
+
+    private int[] ultimaCasaLivre(int origemX, int origemY, int passoX, int passoY) {
         int ultimoX = origemX;
         int ultimoY = origemY;
 
@@ -86,23 +123,7 @@ public class Tabuleiro {
             ultimoY = proximoY;
         }
 
-        if (destinoX != ultimoX || destinoY != ultimoY) {
-            return false;
-        }
-
-        tabuleiro[camada][origemX][origemY] = 0;
-        tabuleiro[camada][destinoX][destinoY] = 1;
-
-        if (camada == 0) {
-            if (pacoca == null) {
-                // Alteração por IA: compatível com o construtor Peca(int, int).
-                pacoca = new Peca(destinoX, destinoY);
-            }
-            pacoca.x = destinoX;
-            pacoca.y = destinoY;
-        }
-
-        return true;
+        return new int[]{ultimoX, ultimoY};
     }
 
     public static float[][][] copiar(float[][][] original) { //copia o tabuleiro para não alterar o original
