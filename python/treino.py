@@ -4,6 +4,7 @@ import numpy as np
 import torch
 import torch.optim as optim
 import torch.nn as nn
+import torch.nn.functional as F
 
 from rede import Rede
 
@@ -13,9 +14,15 @@ CAMINHO_PESOS = os.path.join(PASTA, "modelo_pacoquinha.pth")
 # O ONNX é consumido pelo jogo; mantenha os pesos de treino e os dados em python/.
 CAMINHO_ONNX = os.path.join(os.path.dirname(PASTA), "jogo", "modelo_pacoquinha.onnx")
 
-def treinarLote(rede, otimizador, funcao_perda, inputs_tabuleiros, targets_pecas, targets_destinos):
+def entropia(logits):
+    """Entropia média da distribuição softmax: perto de 0 quando a rede fica determinística."""
+    log_probs = F.log_softmax(logits, dim=1)
+    return -(log_probs.exp() * log_probs).sum(dim=1).mean()
+
+def treinarLote(rede, otimizador, funcao_perda, inputs_tabuleiros, targets_pecas, targets_destinos, beta=0.01):
+    """Faz um passo de treino e retorna (loss de imitação, entropia média das duas cabeças)."""
     if inputs_tabuleiros.size(0) == 0:
-        return 0.0
+        return 0.0, 0.0
 
     # Zera os gradientes
     otimizador.zero_grad()
@@ -26,12 +33,16 @@ def treinarLote(rede, otimizador, funcao_perda, inputs_tabuleiros, targets_pecas
     # Loss (usando a função de perda instanciada lá em cima)
     loss_peca = funcao_perda(logits_peca, targets_pecas)
     loss_destino = funcao_perda(logits_destino, targets_destinos)
-    loss_total = loss_peca + loss_destino
+    loss_imitacao = loss_peca + loss_destino
+
+    # Bônus de entropia: penaliza a rede quando ela fica confiante demais e para de variar as jogadas
+    entropia_media = (entropia(logits_peca) + entropia(logits_destino)) / 2
+    loss_total = loss_imitacao - beta * entropia_media
 
     loss_total.backward()
     otimizador.step()
 
-    return loss_total.item()
+    return loss_imitacao.item(), entropia_media.item()
 
 def lerTabuleiros(caminho_json=CAMINHO_JSON):
     """Lê o arquivo JSON gerado pelo Java, formata os dados e retorna
@@ -118,10 +129,10 @@ if __name__ == "__main__":
 
     if inputs is not None:
         rede.train()
-        loss = treinarLote(
+        loss, ent = treinarLote(
             rede, otimizador, funcao_perda, inputs, t_pecas, t_destinos
         )
-        print(f"Loss Total: {loss:.4f}")
+        print(f"Loss Total: {loss:.4f} | entropia: {ent:.4f}")
 
     # Salva sempre, para que a primeira execução gere o modelo inicial
     torch.save(rede.state_dict(), CAMINHO_PESOS)

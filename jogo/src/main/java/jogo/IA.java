@@ -17,6 +17,7 @@ public class IA implements AutoCloseable {
     private final OrtEnvironment ambiente;
     private final OrtSession sessao;
     private final Random aleatorio = new Random();
+    private double epsilon = 0; // chance de jogar aleatoriamente; 0 fora do treino
 
     public IA() throws OrtException {
         this(CAMINHO_MODELO);
@@ -37,8 +38,16 @@ public class IA implements AutoCloseable {
         }
     }
 
+    public void setEpsilon(double epsilon) {
+        this.epsilon = epsilon;
+    }
+
     public int[] escolheJogada(JogoDaPacoquinha jogo) throws OrtException {
-        float[][] logits = inferencia(montaEntrada(jogo));
+        // exploração: logits zerados dão probabilidade igual a todas as jogadas válidas
+        boolean explora = aleatorio.nextDouble() < epsilon;
+        float[][] logits = explora
+                ? new float[][]{new float[TAMANHO * TAMANHO], new float[TAMANHO * TAMANHO]}
+                : inferencia(montaEntrada(jogo));
 
         float[] logitsPeca = logits[0];
         aplicaMascara(logitsPeca, mascaraOrigens(jogo));

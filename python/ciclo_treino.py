@@ -37,11 +37,16 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--iteracoes", type=int, default=4000)
     parser.add_argument("--partidas", type=int, default=50, help="partidas jogadas pelo Java por iteração")
+    parser.add_argument("--epsilon", type=float, default=0.1,
+                        help="chance de o Java fazer uma jogada aleatória válida em vez da da rede")
+    parser.add_argument("--beta", type=float, default=0.01, help="peso do bônus de entropia na loss")
     parser.add_argument("--salvar-a-cada", type=int, default=500,
                         help="intervalo de iterações entre checkpoints")
     args = parser.parse_args()
     if args.iteracoes < 1 or args.partidas < 1 or args.salvar_a_cada < 1:
         parser.error("--iteracoes, --partidas e --salvar-a-cada devem ser maiores que zero")
+    if not 0 <= args.epsilon <= 1:
+        parser.error("--epsilon deve estar entre 0 e 1")
 
     warnings.filterwarnings("ignore", category=DeprecationWarning)
 
@@ -57,7 +62,7 @@ if __name__ == "__main__":
 
     for iteracao in range(1, args.iteracoes + 1):
         subprocess.run(
-            ["java", "-cp", classpath, "treino.TreinoIA", str(args.partidas)],
+            ["java", "-cp", classpath, "treino.TreinoIA", str(args.partidas), str(args.epsilon)],
             cwd=RAIZ, check=True,
         )
 
@@ -66,8 +71,8 @@ if __name__ == "__main__":
             print(f"Iteração {iteracao}: nenhuma partida com vencedor, sem treino", flush=True)
         else:
             rede.train()
-            loss = treinarLote(rede, otimizador, funcao_perda, inputs, t_pecas, t_destinos)
-            print(f"Iteração {iteracao}: loss {loss:.4f}", flush=True)
+            loss, ent = treinarLote(rede, otimizador, funcao_perda, inputs, t_pecas, t_destinos, args.beta)
+            print(f"Iteração {iteracao}: loss {loss:.4f} | entropia {ent:.4f}", flush=True)
 
             torch.save(rede.state_dict(), CAMINHO_PESOS)
             exportarOnnx(rede)

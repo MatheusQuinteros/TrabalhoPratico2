@@ -38,6 +38,21 @@ class IATest {
     }
 
     @Test
+    void exploracaoTotalSoFazJogadasValidas() throws Exception {
+        Path modelo = Path.of("..", IA.CAMINHO_MODELO);
+        Assumptions.assumeTrue(Files.exists(modelo), "modelo ONNX não gerado");
+
+        try (IA ia = new IA(modelo.toString())) {
+            ia.setEpsilon(1); // toda jogada é aleatória
+            JogoDaPacoquinha jogo = new JogoDaPacoquinha(false);
+            for (int rodada = 0; rodada < 200 && jogo.getVencedora() == -1; rodada++) {
+                int[] jogada = ia.escolheJogada(jogo);
+                assertNotEquals(0, jogo.jogaRodadaPvP(jogada[0], jogada[1], jogada[2], jogada[3]));
+            }
+        }
+    }
+
+    @Test
     void aplicaMascaraZeraProbabilidadeDasInvalidas() {
         float[] logits = {5f, 1f, 3f};
         IA.aplicaMascara(logits, new boolean[]{false, true, true});
@@ -47,14 +62,15 @@ class IATest {
 
     @Test
     void partidaInteiraSoComJogadasValidas() throws Exception {
-        // os testes rodam a partir de jogo/, então o modelo fica em ../python
+        // os testes rodam a partir de jogo/, então o caminho do modelo sobe um nível
         Path modelo = Path.of("..", IA.CAMINHO_MODELO);
         Assumptions.assumeTrue(Files.exists(modelo), "modelo ONNX não gerado");
 
         try (IA ia = new IA(modelo.toString())) {
             JogoIA jogo = new JogoIA(false, ia);
             for (int rodada = 0; rodada < 200 && jogo.getVencedora() == -1; rodada++) {
-                assertNotEquals(0, jogo.jogaRodadaIA());
+                int[] jogada = ia.escolheJogada(jogo);
+                assertNotEquals(0, jogo.jogaRodadaPvP(jogada[0], jogada[1], jogada[2], jogada[3]));
             }
         }
     }

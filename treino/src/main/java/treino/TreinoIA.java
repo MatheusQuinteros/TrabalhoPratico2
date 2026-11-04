@@ -16,6 +16,7 @@ public class TreinoIA {
     private static final String CAMINHO_JSON = "python/jogadas_vencedor.json";
     private static final int MAX_JOGADAS = 200; // evita partidas infinitas com a rede ainda aleatória
     private static final int PARTIDAS_PADRAO = 50;
+    private static final double EPSILON_PADRAO = 0.1;
     public record PassoTreinamento(float[][][] tabuleiro, boolean jogaPacoquinha, int[] jogada) {} //sugestão da IA para fazer uma tupla
 
     private int vitoriasP1 = 0;
@@ -74,10 +75,12 @@ public class TreinoIA {
 
     public static void main(String[] args) throws OrtException {
         int numPartidas = args.length > 0 ? Integer.parseInt(args[0]) : PARTIDAS_PADRAO;
+        double epsilon = args.length > 1 ? Double.parseDouble(args[1]) : EPSILON_PADRAO;
 
         TreinoIA treino = new TreinoIA();
         ArrayList<PassoTreinamento> todasJogadas = new ArrayList<>();
         try (IA ia = new IA()) {
+            ia.setEpsilon(epsilon);
             for (int i = 0; i < numPartidas; i++) {
                 todasJogadas.addAll(treino.jogaPartidaTreinamento(ia));
             }
