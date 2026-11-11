@@ -34,6 +34,9 @@ public class TreinoIA {
         int jogadas = 0;
         while (jogoOficial.getVencedora() == -1 && jogadas < MAX_JOGADAS){
             jogadas++;
+            // regra não define o que fazer quando a jogadora da vez não tem jogada: descarta a partida
+            if (!temJogada(jogoOficial)) break;
+
             if (jogoOficial.getJogadorAtual() == 2){
                 int[] jogada = ia.escolheJogada(jogoOficial);
                 PassoTreinamento passo = new PassoTreinamento(jogoOficial.getTabuleiro(), jogoOficial.deveMoverPacoca(), jogada);
@@ -60,6 +63,13 @@ public class TreinoIA {
         }
         semVencedor++;
         return new ArrayList<>();
+    }
+
+    private static boolean temJogada(JogoIA jogo) {
+        for (boolean origem : IA.mascaraOrigens(jogo)) {
+            if (origem) return true;
+        }
+        return false;
     }
 
     private void enviaListaJogadas(ArrayList<PassoTreinamento> listaJogadas){

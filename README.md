@@ -95,3 +95,23 @@ pesos retomáveis (`.pth`) e os dados de treino ficam em `python/`.
 
 As alterações das correções 3 e 4 e os trechos produzidos por IA estão identificados
 por comentários nos arquivos Java.
+
+## Executável
+
+`mvn package` gera `jogo/target/jogo-1.0-SNAPSHOT.jar`, que já traz o onnxruntime e o
+modelo `modelo_pacoquinha.onnx`. Ele roda de qualquer pasta (precisa de Java 21):
+
+```bash
+java -jar jogo/target/jogo-1.0-SNAPSHOT.jar
+```
+
+Para um executável que não precisa de Java instalado, use o `jpackage`:
+
+```bash
+mkdir -p dist/entrada && cp jogo/target/jogo-1.0-SNAPSHOT.jar dist/entrada/
+jpackage --type app-image --name JogoDaPacoquinha --input dist/entrada \
+  --main-jar jogo-1.0-SNAPSHOT.jar --main-class interfacegrafica.InterfaceGrafica --dest dist
+```
+
+O executável fica em `dist/JogoDaPacoquinha/bin/JogoDaPacoquinha`. Com `--type deb` sai um
+instalador `.deb`; para `.exe`, rode o mesmo comando no Windows.

@@ -26,6 +26,18 @@
   </dependencies>
 
   <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+      <!-- embute o modelo exportado pelo Python dentro do .jar -->
+      <resource>
+        <directory>${project.basedir}</directory>
+        <includes>
+          <include>modelo_pacoquinha.onnx</include>
+        </includes>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -44,6 +56,28 @@
         <configuration>
           <mainClass>interfacegrafica.InterfaceGrafica</mainClass>
         </configuration>
+      </plugin>
+      <!-- gera um .jar único com o onnxruntime junto, executável com java -jar -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <createDependencyReducedPom>false</createDependencyReducedPom>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <mainClass>interfacegrafica.InterfaceGrafica</mainClass>
+                </transformer>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+              </transformers>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>

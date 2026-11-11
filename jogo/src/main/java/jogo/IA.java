@@ -1,5 +1,9 @@
 package jogo;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Random;
 
@@ -20,7 +24,24 @@ public class IA implements AutoCloseable {
     private double epsilon = 0; // chance de jogar aleatoriamente; 0 fora do treino
 
     public IA() throws OrtException {
-        this(CAMINHO_MODELO);
+        // usa o modelo do disco se existir (treino); senão o que vem dentro do .jar
+        ambiente = OrtEnvironment.getEnvironment();
+        if (Files.exists(Path.of(CAMINHO_MODELO))) {
+            sessao = ambiente.createSession(CAMINHO_MODELO, new OrtSession.SessionOptions());
+        } else {
+            sessao = ambiente.createSession(leModeloEmbutido(), new OrtSession.SessionOptions());
+        }
+    }
+
+    private static byte[] leModeloEmbutido() throws OrtException {
+        try (InputStream entrada = IA.class.getResourceAsStream("/modelo_pacoquinha.onnx")) {
+            if (entrada == null) {
+                throw new OrtException("Modelo não encontrado: " + CAMINHO_MODELO);
+            }
+            return entrada.readAllBytes();
+        } catch (IOException e) {
+            throw new OrtException("Erro ao ler o modelo embutido: " + e.getMessage());
+        }
     }
 
     public IA(String caminhoModelo) throws OrtException {

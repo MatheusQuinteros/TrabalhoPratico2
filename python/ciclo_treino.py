@@ -35,7 +35,7 @@ def montarClasspath():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--iteracoes", type=int, default=4000)
+    parser.add_argument("--iteracoes", type=int, default=50000)
     parser.add_argument("--partidas", type=int, default=50, help="partidas jogadas pelo Java por iteração")
     parser.add_argument("--epsilon", type=float, default=0.1,
                         help="chance de o Java fazer uma jogada aleatória válida em vez da da rede")
