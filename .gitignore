@@ -7,4 +7,3 @@ dados/
 __pycache__/
 python/modelos/
 dist/
-*.desktop
