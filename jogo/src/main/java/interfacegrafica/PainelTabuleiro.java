@@ -32,7 +32,7 @@ public class PainelTabuleiro extends JPanel {
      * @param ultimo origem e destino do último movimento ({x1, y1, x2, y2}), ou null
      */
     void atualizar(Jogo jogo, int[] selecionada, int[] ultimo) {
-        boolean encerrada = jogo.getVencedora() != -1;
+        boolean encerrada = jogo.getResultado().terminou();
         for (int x = 0; x < TAMANHO; x++) {
             for (int y = 0; y < TAMANHO; y++) {
                 casas[x][y].setEnabled(!encerrada);

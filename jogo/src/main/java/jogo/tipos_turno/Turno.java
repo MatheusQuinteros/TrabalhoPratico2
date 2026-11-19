@@ -1,33 +1,23 @@
 package jogo.tipos_turno;
 
+import jogo.tipos_jogo.Jogadora;
+
 public abstract class Turno {
-    private int estadoTurno;
+    private EstadoTurno estadoTurno;
 
-    protected Turno(int estadoInicial) {
-        if (estadoInicial < 0 || estadoInicial > 3) {
-            throw new IllegalArgumentException("Estado inicial do turno deve estar entre 0 e 3");
-        }
-        this.estadoTurno = estadoInicial;
+    protected Turno(EstadoTurno estadoInicial) {
+        this.estadoTurno = java.util.Objects.requireNonNull(estadoInicial, "estadoInicial");
     }
 
-    public int getJogadorAtual(){ //Devolve 1 caso seja vez do jogador 1, e 2 caso seja o jogador 2, se nao for nenhum dos dois, retorna -1
-        if (estadoTurno == 1 || estadoTurno == 2) {
-            return 1;
-        }
-        if (estadoTurno == 3 || estadoTurno == 0) {
-            return 2;
-        }
-        return -1;
+    public Jogadora getJogadoraAtual() {
+        return estadoTurno.jogadora();
     }
 
-    public boolean deveMoverPaçoquinha(){//retorna true caso seja verdade, e false caso contrario
-        if (estadoTurno == 1|| estadoTurno == 3){
-            return true;
-        }
-        return false;
+    public boolean deveMoverPaçoquinha() {
+        return estadoTurno.deveMoverPaçoquinha();
     }
 
-    public void avançarTurno(){// avança a jogada
-        estadoTurno = (estadoTurno + 1) % 4;
+    public void avançarTurno() {
+        estadoTurno = estadoTurno.proximo();
     }
 }

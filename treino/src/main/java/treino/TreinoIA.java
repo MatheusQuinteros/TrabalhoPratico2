@@ -4,6 +4,8 @@ import jogo.IA;
 import jogo.tipos_jogo.Jogo;
 import jogo.tipos_jogo.JogoIA;
 import jogo.tipos_jogo.JogoTreinoP1;
+import jogo.tipos_jogo.Jogadora;
+import jogo.tipos_jogo.ResultadoPartida;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -34,12 +36,12 @@ public class TreinoIA {
 
 
         int jogadas = 0;
-        while (jogoOficial.getVencedora() == -1 && jogadas < MAX_JOGADAS){
+        while (!jogoOficial.getResultado().terminou() && jogadas < MAX_JOGADAS){
             jogadas++;
             // regra não define o que fazer quando a jogadora da vez não tem jogada: descarta a partida
             if (!temJogada(jogoOficial)) break;
 
-            if (jogoOficial.getJogadorAtual() == 2){
+            if (jogoOficial.getJogadoraAtual() == Jogadora.JOGADORA_2){
                 int[] jogada = ia.escolheJogada(jogoOficial);
                 PassoTreinamento passo = new PassoTreinamento(jogoOficial.getTabuleiro(), jogoOficial.deveMoverPacoca(), jogada);
                 jogoOficial.jogaRodadaPvP(jogada[0], jogada[1], jogada[2], jogada[3]);
@@ -55,11 +57,11 @@ public class TreinoIA {
             }
         }
         
-        if (jogoOficial.getVencedora() == 1){
+        if (jogoOficial.getResultado() == ResultadoPartida.VITORIA_JOGADORA_1) {
             vitoriasP1++;
             return jogadasP1;
         }
-        else if (jogoOficial.getVencedora() == 2){
+        if (jogoOficial.getResultado() == ResultadoPartida.VITORIA_JOGADORA_2) {
             vitoriasP2++;
             return jogadasP2;
         }
@@ -86,8 +88,14 @@ public class TreinoIA {
     }
 
     public static void main(String[] args) throws OrtException {
-        int numPartidas = args.length > 0 ? Integer.parseInt(args[0]) : PARTIDAS_PADRAO;
-        double epsilon = args.length > 1 ? Double.parseDouble(args[1]) : EPSILON_PADRAO;
+        int numPartidas = PARTIDAS_PADRAO;
+        if (args.length > 0) {
+            numPartidas = Integer.parseInt(args[0]);
+        }
+        double epsilon = EPSILON_PADRAO;
+        if (args.length > 1) {
+            epsilon = Double.parseDouble(args[1]);
+        }
 
         TreinoIA treino = new TreinoIA();
         ArrayList<PassoTreinamento> todasJogadas = new ArrayList<>();

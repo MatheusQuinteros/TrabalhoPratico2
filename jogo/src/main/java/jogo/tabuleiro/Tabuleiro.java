@@ -1,5 +1,7 @@
 package jogo.tabuleiro;
 
+import jogo.tipos_jogo.JogadaInvalidaException;
+
 public class Tabuleiro {
     private float[][][] tabuleiro; //float pois é mais prática a conversão para tensor no pytorch
     private Peca pacoca;
@@ -32,35 +34,35 @@ public class Tabuleiro {
         return pacoca;
     }
 
-    public boolean jogar(int origemX, int origemY, int camada, int destinoX, int destinoY) {
+    public void jogar(int origemX, int origemY, int camada, int destinoX, int destinoY) {
         if (camada < 0 || camada >= CAMADAS
                 || origemX < 0 || origemX >= TAMANHO
                 || origemY < 0 || origemY >= TAMANHO
                 || destinoX < 0 || destinoX >= TAMANHO
                 || destinoY < 0 || destinoY >= TAMANHO) {
-            return false;
+            throw new JogadaInvalidaException("A origem ou o destino está fora do tabuleiro.");
         }
 
         if (tabuleiro[camada][origemX][origemY] != 1) {
-            return false;
+            throw new JogadaInvalidaException("A origem não contém a peça que deve ser movida.");
         }
 
         int deslocamentoX = destinoX - origemX;
         int deslocamentoY = destinoY - origemY;
 
         if (deslocamentoX == 0 && deslocamentoY == 0) {
-            return false;
+            throw new JogadaInvalidaException("A peça precisa sair da casa de origem.");
         }
         if (deslocamentoX != 0 && deslocamentoY != 0
                 && Math.abs(deslocamentoX) != Math.abs(deslocamentoY)) {
-            return false;
+            throw new JogadaInvalidaException("A peça só pode se mover em linha reta ou na diagonal.");
         }
 
         int[] ultima = ultimaCasaLivre(origemX, origemY,
                 Integer.signum(deslocamentoX), Integer.signum(deslocamentoY));
 
         if (destinoX != ultima[0] || destinoY != ultima[1]) {
-            return false;
+            throw new JogadaInvalidaException("O destino precisa ser a última casa livre naquela direção.");
         }
 
         tabuleiro[camada][origemX][origemY] = 0;
@@ -74,8 +76,6 @@ public class Tabuleiro {
             pacoca.x = destinoX;
             pacoca.y = destinoY;
         }
-
-        return true;
     }
 
     public boolean[] destinosValidos(int origemX, int origemY) {

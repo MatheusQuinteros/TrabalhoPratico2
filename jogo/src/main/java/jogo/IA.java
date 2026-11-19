@@ -67,9 +67,12 @@ public class IA implements AutoCloseable {
     public int[] escolheJogada(Jogo jogo) throws OrtException {
         // exploração: logits zerados dão probabilidade igual a todas as jogadas válidas
         boolean explora = aleatorio.nextDouble() < epsilon;
-        float[][] logits = explora
-                ? new float[][]{new float[TAMANHO * TAMANHO], new float[TAMANHO * TAMANHO]}
-                : inferencia(montaEntrada(jogo));
+        float[][] logits;
+        if (explora) {
+            logits = new float[][]{new float[TAMANHO * TAMANHO], new float[TAMANHO * TAMANHO]};
+        } else {
+            logits = inferencia(montaEntrada(jogo));
+        }
 
         float[] logitsPeca = logits[0];
         aplicaMascara(logitsPeca, mascaraOrigens(jogo));
@@ -97,13 +100,20 @@ public class IA implements AutoCloseable {
                 }
             }
         }
-        entrada[i] = jogo.deveMoverPacoca() ? 1f : 0f;
+        if (jogo.deveMoverPacoca()) {
+            entrada[i] = 1f;
+        } else {
+            entrada[i] = 0f;
+        }
         return entrada;
     }
 
     public static boolean[] mascaraOrigens(Jogo jogo) {
         // mesma regra de camada usada em jogaRodadaPvP
-        int camada = jogo.deveMoverPacoca() ? 0 : jogo.getJogadorAtual();
+        int camada = 0;
+        if (!jogo.deveMoverPacoca()) {
+            camada = jogo.getJogadoraAtual().camada();
+        }
         float[][][] tabuleiro = jogo.getTabuleiro();
         boolean[] mascara = new boolean[TAMANHO * TAMANHO];
 
@@ -152,7 +162,10 @@ public class IA implements AutoCloseable {
             sorteio -= probabilidades[i];
             if (sorteio <= 0) return i;
         }
-        return ultimoValido; // erro de arredondamento
+        if (ultimoValido >= 0) {
+            return ultimoValido;
+        }
+        throw new IllegalStateException("Não foi possível selecionar uma jogada válida.");
     }
 
     @Override

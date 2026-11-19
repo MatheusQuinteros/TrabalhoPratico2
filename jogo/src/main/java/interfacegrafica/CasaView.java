@@ -8,6 +8,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import javax.swing.JButton;
+import jogo.tipos_jogo.TipoCasa;
 
 /** Desenha uma casa do tabuleiro a partir do estado recebido; não conhece o jogo. */
 public class CasaView extends JButton {
@@ -22,7 +23,7 @@ public class CasaView extends JButton {
 
     private final int linha;
     private final int coluna;
-    private int peca = -1;
+    private TipoCasa peca = TipoCasa.VAZIA;
     private boolean selecionada;
     private boolean ultimoMovimento;
 
@@ -35,14 +36,26 @@ public class CasaView extends JButton {
         setToolTipText(descricaoPosicao() + objetivo());
     }
 
-    void mostrar(int peca, boolean selecionada, boolean ultimoMovimento) {
+    void mostrar(TipoCasa peca, boolean selecionada, boolean ultimoMovimento) {
         this.peca = peca;
         this.selecionada = selecionada;
         this.ultimoMovimento = ultimoMovimento;
-        getAccessibleContext().setAccessibleName(descricaoPosicao() + ": "
-                + (peca == -1 ? "vazia" : peca == 0 ? "paçoquinha" : "jogadora " + peca)
-                + (selecionada ? ", selecionada" : "")
-                + (ultimoMovimento ? ", último movimento" : ""));
+        String descricaoPeca = "vazia";
+        if (peca == TipoCasa.PACOQUINHA) {
+            descricaoPeca = "paçoquinha";
+        } else if (peca == TipoCasa.JOGADORA_1) {
+            descricaoPeca = "jogadora 1";
+        } else if (peca == TipoCasa.JOGADORA_2) {
+            descricaoPeca = "jogadora 2";
+        }
+        String descricaoEstado = "";
+        if (selecionada) {
+            descricaoEstado += ", selecionada";
+        }
+        if (ultimoMovimento) {
+            descricaoEstado += ", último movimento";
+        }
+        getAccessibleContext().setAccessibleName(descricaoPosicao() + ": " + descricaoPeca + descricaoEstado);
         repaint();
     }
 
@@ -62,7 +75,11 @@ public class CasaView extends JButton {
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         int w = getWidth();
         int h = getHeight();
-        g.setColor((linha + coluna) % 2 == 0 ? CASA_ESCURA : CASA_CLARA);
+        if ((linha + coluna) % 2 == 0) {
+            g.setColor(CASA_ESCURA);
+        } else {
+            g.setColor(CASA_CLARA);
+        }
         g.fillRoundRect(0, 0, w, h, 14, 14);
         pintarObjetivo(g, w, h);
         if (ultimoMovimento) {
@@ -83,23 +100,44 @@ public class CasaView extends JButton {
     /** Faixa na borda externa das linhas para onde cada jogadora quer levar a paçoquinha. */
     private void pintarObjetivo(Graphics2D g, int w, int h) {
         if (linha != 0 && linha != ULTIMA_LINHA) return;
-        Color cor = linha == 0 ? JOGADORA_1 : JOGADORA_2;
+        Color cor = JOGADORA_2;
+        if (linha == 0) {
+            cor = JOGADORA_1;
+        }
         g.setColor(new Color(cor.getRed(), cor.getGreen(), cor.getBlue(), 40));
         g.fillRoundRect(0, 0, w, h, 14, 14);
         g.setColor(cor);
         int faixa = Math.max(4, h / 16);
-        g.fillRoundRect(4, linha == 0 ? 2 : h - faixa - 2, w - 8, faixa, faixa, faixa);
+        int posicaoFaixa = h - faixa - 2;
+        if (linha == 0) {
+            posicaoFaixa = 2;
+        }
+        g.fillRoundRect(4, posicaoFaixa, w - 8, faixa, faixa, faixa);
     }
 
     private void pintarPeca(Graphics2D g, int w, int h) {
-        if (peca == -1) return;
+        if (peca == TipoCasa.VAZIA) return;
         int tamanho = Math.min(w, h) * 2 / 3;
         int esquerda = (w - tamanho) / 2;
         int topo = (h - tamanho) / 2;
-        g.setColor(peca == 0 ? PACOQUINHA : peca == 1 ? JOGADORA_1 : JOGADORA_2);
-        if (peca == 0) g.fillRoundRect(esquerda, topo, tamanho, tamanho, 14, 14);
-        else g.fillOval(esquerda, topo, tamanho, tamanho);
-        String texto = peca == 0 ? "Paç." : String.valueOf(peca);
+        Color corPeca = PACOQUINHA;
+        if (peca == TipoCasa.JOGADORA_1) {
+            corPeca = JOGADORA_1;
+        } else if (peca == TipoCasa.JOGADORA_2) {
+            corPeca = JOGADORA_2;
+        }
+        g.setColor(corPeca);
+        if (peca == TipoCasa.PACOQUINHA) {
+            g.fillRoundRect(esquerda, topo, tamanho, tamanho, 14, 14);
+        } else {
+            g.fillOval(esquerda, topo, tamanho, tamanho);
+        }
+        String texto = "Paç.";
+        if (peca == TipoCasa.JOGADORA_1) {
+            texto = "1";
+        } else if (peca == TipoCasa.JOGADORA_2) {
+            texto = "2";
+        }
         g.setColor(Color.WHITE);
         g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, Math.max(12, tamanho / 3)));
         g.drawString(texto, (w - g.getFontMetrics().stringWidth(texto)) / 2,

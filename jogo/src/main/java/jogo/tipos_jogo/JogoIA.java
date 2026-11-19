@@ -17,13 +17,16 @@ public class JogoIA extends Jogo implements AutoCloseable {
         this.ia = ia;
     }
 
-    public int jogaRodadaPvIA(int origemX, int origemY, int destinoX, int destinoY) throws OrtException {
-        if (getVencedora() != -1) return getVencedora();
+    public ResultadoPartida jogaRodadaPvIA(int origemX, int origemY, int destinoX, int destinoY) throws OrtException {
+        if (getResultado().terminou()) return getResultado();
 
         // A jogadora 1 é humana; a IA controla a jogadora 2.
-        int[] jogada = getJogadorAtual() == 1
-                ? new int[] {origemX, origemY, destinoX, destinoY}
-                : ia.escolheJogada(this);
+        int[] jogada;
+        if (getJogadoraAtual() == Jogadora.JOGADORA_1) {
+            jogada = new int[] {origemX, origemY, destinoX, destinoY};
+        } else {
+            jogada = ia.escolheJogada(this);
+        }
         return jogaRodadaPvP(jogada[0], jogada[1], jogada[2], jogada[3]);
     }
 

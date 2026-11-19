@@ -1,19 +1,21 @@
 package jogo;
 
 import jogo.tabuleiro.Tabuleiro;
+import jogo.tipos_jogo.Jogadora;
 import jogo.tipos_turno.Turno;
+import java.util.Optional;
 
 public class ChecadorVitoria {
-    public int ganhou(Tabuleiro tabuleiro, Turno turno) { //retorna 1 se jogador 1 ganhou, 2 se jogador 2 ganhou e -1 se nao acabou
+    public Optional<Jogadora> vencedora(Tabuleiro tabuleiro, Turno turno) {
         int x_pacoca = tabuleiro.getPacoca().getX();
         int y_pacoca = tabuleiro.getPacoca().getY();
         
-        if (x_pacoca == 0) return 1;
-        if (x_pacoca == 4) return 2;
+        if (x_pacoca == 0) return Optional.of(Jogadora.JOGADORA_1);
+        if (x_pacoca == 4) return Optional.of(Jogadora.JOGADORA_2);
 
         //A chamada ocorre antes de avançar o turno; após mover a paçoca,
         // a jogadora ainda pode abrir uma saída ao mover uma peça sua. */
-        if (turno.deveMoverPaçoquinha()) return -1;
+        if (turno.deveMoverPaçoquinha()) return Optional.empty();
 
         float[][][] tabuleiro_aux = tabuleiro.getTabuleiro();
 
@@ -29,11 +31,11 @@ public class ChecadorVitoria {
                 if (x < 0 || x >= tabuleiro.TAMANHO) continue;
 
                 float casa = tabuleiro_aux[0][x][y] + tabuleiro_aux[1][x][y] + tabuleiro_aux[2][x][y];
-                if (casa == 0) return -1;
+                if (casa == 0) return Optional.empty();
             }
         }
 
         // A próxima jogadora está bloqueada: vence quem acabou de mover sua peça.
-        return turno.getJogadorAtual();
+        return Optional.of(turno.getJogadoraAtual());
     }
 }

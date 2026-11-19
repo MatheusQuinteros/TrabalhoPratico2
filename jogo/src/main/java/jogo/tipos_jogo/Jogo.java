@@ -1,67 +1,58 @@
 package jogo.tipos_jogo;
 
+import java.util.Optional;
+
 import jogo.ChecadorVitoria;
 import jogo.tabuleiro.Tabuleiro;
 import jogo.tipos_turno.Turno;
 
 public abstract class Jogo {
+    protected final Tabuleiro tabuleiro_jogo;
+    protected final Turno turno_jogo;
+    protected final ChecadorVitoria checador_jogo;
+    private ResultadoPartida resultado = ResultadoPartida.EM_ANDAMENTO;
 
-    protected  Tabuleiro tabuleiro_jogo; // tive que tornar público por conta do treinamento
-    protected  Turno turno_jogo;
-    protected  ChecadorVitoria checador_jogo;
-    protected  int vencedora = -1;
-    
     protected Jogo(Turno turnoInicial) {
-        // Construtor: Inicializa o tabuleiro 5x5 e o estado inicial
         tabuleiro_jogo = new Tabuleiro();
         turno_jogo = java.util.Objects.requireNonNull(turnoInicial, "turnoInicial");
         checador_jogo = new ChecadorVitoria();
     }
 
-
-    public int jogaRodadaPvP(int origemX, int origemY, int destinoX, int destinoY){
-        if (vencedora != -1) return vencedora;
-        
-        //retorna 
-        // 0 - jogada invalida (interface deve repetir)
-        // 1 - jogada valida p1 campeao
-        // 2 - jogada valida p2 campeao
-        // 3 - jogada valida sem campeao
-        
-        boolean jogada_valida = true;
-        
-        if (turno_jogo.deveMoverPaçoquinha()){
-            jogada_valida = tabuleiro_jogo.jogar(origemX, origemY, 0, destinoX, destinoY);
+    public ResultadoPartida jogaRodadaPvP(int origemX, int origemY, int destinoX, int destinoY) {
+        if (resultado.terminou()) {
+            return resultado;
         }
 
-        else {
-           jogada_valida = tabuleiro_jogo.jogar(origemX, origemY, turno_jogo.getJogadorAtual(), destinoX, destinoY);
+        int camada = 0;
+        if (!turno_jogo.deveMoverPaçoquinha()) {
+            camada = turno_jogo.getJogadoraAtual().camada();
+        }
+        tabuleiro_jogo.jogar(origemX, origemY, camada, destinoX, destinoY);
+
+        Optional<Jogadora> vencedora = checador_jogo.vencedora(tabuleiro_jogo, turno_jogo);
+        if (vencedora.isPresent()) {
+            resultado = ResultadoPartida.vitoriaDe(vencedora.get());
+            return resultado;
         }
 
-        if (!jogada_valida) return 0;
-
-        int ganhou = checador_jogo.ganhou(tabuleiro_jogo, turno_jogo);
-
-        if (ganhou != -1) {
-            vencedora = ganhou;
-            return vencedora;
-        }
-        
         turno_jogo.avançarTurno();
-
-        return 3;
+        return resultado;
     }
 
-    public float[][][] getTabuleiro(){
-        return  tabuleiro_jogo.getTabuleiro();
+    public float[][][] getTabuleiro() {
+        return tabuleiro_jogo.getTabuleiro();
     }
 
-    public int getVencedora() {
-        return vencedora;
+    public ResultadoPartida getResultado() {
+        return resultado;
     }
 
-    public int getJogadorAtual() {
-        return turno_jogo.getJogadorAtual();
+    public Optional<Jogadora> getVencedora() {
+        return resultado.vencedora();
+    }
+
+    public Jogadora getJogadoraAtual() {
+        return turno_jogo.getJogadoraAtual();
     }
 
     public boolean deveMoverPacoca() {
@@ -72,11 +63,15 @@ public abstract class Jogo {
         return tabuleiro_jogo.destinosValidos(linha, coluna);
     }
 
-    public int getCasa(int linha, int coluna) {
+    public TipoCasa getCasa(int linha, int coluna) {
         float[][][] casas = tabuleiro_jogo.getTabuleiro();
         for (int camada = 0; camada < tabuleiro_jogo.CAMADAS; camada++) {
-            if (casas[camada][linha][coluna] != 0) return camada;
+            if (casas[camada][linha][coluna] != 0) {
+                if (camada == 0) return TipoCasa.PACOQUINHA;
+                if (camada == 1) return TipoCasa.JOGADORA_1;
+                return TipoCasa.JOGADORA_2;
+            }
         }
-        return -1;
+        return TipoCasa.VAZIA;
     }
 }
