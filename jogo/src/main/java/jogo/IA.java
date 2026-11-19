@@ -11,6 +11,7 @@ import ai.onnxruntime.OnnxTensor;
 import ai.onnxruntime.OrtEnvironment;
 import ai.onnxruntime.OrtException;
 import ai.onnxruntime.OrtSession;
+import jogo.tipos_jogo.Jogo;
 
 //classe criada por IA responsável por fazer a inferência do modelo onnx e escolher a jogada
 public class IA implements AutoCloseable {
@@ -63,7 +64,7 @@ public class IA implements AutoCloseable {
         this.epsilon = epsilon;
     }
 
-    public int[] escolheJogada(JogoDaPacoquinha jogo) throws OrtException {
+    public int[] escolheJogada(Jogo jogo) throws OrtException {
         // exploração: logits zerados dão probabilidade igual a todas as jogadas válidas
         boolean explora = aleatorio.nextDouble() < epsilon;
         float[][] logits = explora
@@ -84,7 +85,7 @@ public class IA implements AutoCloseable {
         return new int[]{origemLinha, origemColuna, destino / TAMANHO, destino % TAMANHO};
     }
 
-    public static float[] montaEntrada(JogoDaPacoquinha jogo) {
+    public static float[] montaEntrada(Jogo jogo) {
         // mesma ordem do flatten do numpy em lerTabuleiros: [camada][linha][coluna] + flag da paçoca
         float[][][] tabuleiro = jogo.getTabuleiro();
         float[] entrada = new float[ENTRADAS];
@@ -100,7 +101,7 @@ public class IA implements AutoCloseable {
         return entrada;
     }
 
-    public static boolean[] mascaraOrigens(JogoDaPacoquinha jogo) {
+    public static boolean[] mascaraOrigens(Jogo jogo) {
         // mesma regra de camada usada em jogaRodadaPvP
         int camada = jogo.deveMoverPacoca() ? 0 : jogo.getJogadorAtual();
         float[][][] tabuleiro = jogo.getTabuleiro();

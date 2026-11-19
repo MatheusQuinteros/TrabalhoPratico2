@@ -1,20 +1,23 @@
-package jogo;
+package jogo.tipos_jogo;
 
+import jogo.ChecadorVitoria;
 import jogo.tabuleiro.Tabuleiro;
+import jogo.tipos_turno.Turno;
 
-public class JogoDaPacoquinha {
+public abstract class Jogo {
 
-    private Tabuleiro tabuleiro_jogo; // tive que tornar público por conta do treinamento
-    private Turno turno_jogo; // tive que tornar público por conta do treinamento
-    private ChecadorVitoria checador_jogo;
-    private int vencedora = -1;
+    protected  Tabuleiro tabuleiro_jogo; // tive que tornar público por conta do treinamento
+    protected  Turno turno_jogo;
+    protected  ChecadorVitoria checador_jogo;
+    protected  int vencedora = -1;
     
-    public JogoDaPacoquinha(boolean treinamento) {
+    protected Jogo(Turno turnoInicial) {
         // Construtor: Inicializa o tabuleiro 5x5 e o estado inicial
         tabuleiro_jogo = new Tabuleiro();
-        turno_jogo = new Turno(treinamento);
+        turno_jogo = java.util.Objects.requireNonNull(turnoInicial, "turnoInicial");
         checador_jogo = new ChecadorVitoria();
     }
+
 
     public int jogaRodadaPvP(int origemX, int origemY, int destinoX, int destinoY){
         if (vencedora != -1) return vencedora;

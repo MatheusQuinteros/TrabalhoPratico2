@@ -1,7 +1,9 @@
 package treino;
 
 import jogo.IA;
-import jogo.JogoIA;
+import jogo.tipos_jogo.Jogo;
+import jogo.tipos_jogo.JogoIA;
+import jogo.tipos_jogo.JogoTreinoP1;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -24,10 +26,10 @@ public class TreinoIA {
     private int semVencedor = 0;
 
     private ArrayList<PassoTreinamento> jogaPartidaTreinamento(IA ia) throws OrtException {
-        JogoIA jogoP1 = new JogoIA(true, ia); //p1 vai jogar com a perspectiva do p2
+        Jogo jogoP1 = new JogoTreinoP1(ia); // P1 começa com a perspectiva do P2
         ArrayList<PassoTreinamento> jogadasP1= new ArrayList<>();
 
-        JogoIA jogoOficial = new JogoIA(false, ia);
+        Jogo jogoOficial = new JogoIA(ia);
         ArrayList<PassoTreinamento> jogadasP2= new ArrayList<>();
 
 
@@ -65,7 +67,7 @@ public class TreinoIA {
         return new ArrayList<>();
     }
 
-    private static boolean temJogada(JogoIA jogo) {
+    private static boolean temJogada(Jogo jogo) {
         for (boolean origem : IA.mascaraOrigens(jogo)) {
             if (origem) return true;
         }

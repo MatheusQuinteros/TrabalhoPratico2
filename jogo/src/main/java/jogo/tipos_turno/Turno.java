@@ -1,18 +1,20 @@
-package jogo;
+package jogo.tipos_turno;
 
-public class Turno{
+public abstract class Turno {
     private int estadoTurno;
 
-    public Turno(Boolean treinoP1){
-        if (!treinoP1) estadoTurno = 0;
-        else estadoTurno = 2;
+    protected Turno(int estadoInicial) {
+        if (estadoInicial < 0 || estadoInicial > 3) {
+            throw new IllegalArgumentException("Estado inicial do turno deve estar entre 0 e 3");
+        }
+        this.estadoTurno = estadoInicial;
     }
 
     public int getJogadorAtual(){ //Devolve 1 caso seja vez do jogador 1, e 2 caso seja o jogador 2, se nao for nenhum dos dois, retorna -1
-        if (estadoTurno==1||estadoTurno==2){
+        if (estadoTurno == 1 || estadoTurno == 2) {
             return 1;
         }
-        if (estadoTurno==3||estadoTurno==0){
+        if (estadoTurno == 3 || estadoTurno == 0) {
             return 2;
         }
         return -1;

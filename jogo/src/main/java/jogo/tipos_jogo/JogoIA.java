@@ -1,12 +1,19 @@
-package jogo;
+package jogo.tipos_jogo;
 
 import ai.onnxruntime.OrtException;
+import jogo.IA;
+import jogo.tipos_turno.Turno;
+import jogo.tipos_turno.TurnoJogo;
 
-public class JogoIA extends JogoDaPacoquinha implements AutoCloseable {
+public class JogoIA extends Jogo implements AutoCloseable {
     private final IA ia;
 
-    public JogoIA(boolean treinamento, IA ia){
-        super(treinamento);
+    public JogoIA(IA ia) {
+        this(new TurnoJogo(), ia);
+    }
+
+    protected JogoIA(Turno turnoInicial, IA ia) {
+        super(turnoInicial);
         this.ia = ia;
     }
 

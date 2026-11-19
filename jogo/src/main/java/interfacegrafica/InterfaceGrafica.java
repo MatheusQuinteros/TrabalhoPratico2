@@ -16,9 +16,10 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import ai.onnxruntime.OrtException;
-import jogo.JogoDaPacoquinha;
-import jogo.JogoIA;
 import jogo.IA;
+import jogo.tipos_jogo.Jogo;
+import jogo.tipos_jogo.JogoIA;
+import jogo.tipos_jogo.JogoPvP;
 
 /** Janela do jogo: controla seleção e cliques e delega o desenho ao PainelTabuleiro. */
 public class InterfaceGrafica extends JPanel {
@@ -26,7 +27,7 @@ public class InterfaceGrafica extends JPanel {
     private final JLabel turno = new JLabel("", SwingConstants.CENTER);
     private final JLabel mensagem = new JLabel("", SwingConstants.CENTER);
     private final PainelTabuleiro tabuleiro = new PainelTabuleiro(this::clicar);
-    private JogoDaPacoquinha jogo = new JogoDaPacoquinha(false);
+    private Jogo jogo = new JogoPvP();
     private int[] origem;
     private int[] ultimoMovimento;
     private boolean pensando;
@@ -148,15 +149,15 @@ public class InterfaceGrafica extends JPanel {
         }
         if (contraIA) {
             try {
-                jogo = new JogoIA(false, new IA());
+                jogo = new JogoIA(new IA());
             } catch (OrtException ex) {
-                jogo = new JogoDaPacoquinha(false);
+                jogo = new JogoPvP();
                 JOptionPane.showMessageDialog(this,
                         "Não foi possível carregar " + IA.CAMINHO_MODELO + ". Gere o modelo ONNX primeiro.\n"
                                 + ex.getMessage(), "Erro ao carregar IA", JOptionPane.ERROR_MESSAGE);
             }
         } else {
-            jogo = new JogoDaPacoquinha(false);
+            jogo = new JogoPvP();
         }
         origem = null;
         ultimoMovimento = null;
