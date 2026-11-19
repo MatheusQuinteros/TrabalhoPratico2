@@ -1,0 +1,113 @@
+package treino;
+
+import jogo.IA;
+import jogo.tipos_jogo.Jogo;
+import jogo.tipos_jogo.JogoIA;
+import jogo.tipos_jogo.JogoTreinoP1;
+import jogo.tipos_jogo.Jogadora;
+import jogo.tipos_jogo.ResultadoPartida;
+
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+
+import com.google.gson.Gson;
+
+import ai.onnxruntime.OrtException;
+
+public class TreinoIA {
+    private static final int TAMANHO_TAB = 4;
+    private static final String CAMINHO_JSON = "python/jogadas_vencedor.json";
+    private static final int MAX_JOGADAS = 200; // evita partidas infinitas com a rede ainda aleatória
+    private static final int PARTIDAS_PADRAO = 50;
+    private static final double EPSILON_PADRAO = 0.1;
+    public record PassoTreinamento(float[][][] tabuleiro, boolean jogaPacoquinha, int[] jogada) {} //sugestão da IA para fazer uma tupla
+
+    private int vitoriasP1 = 0;
+    private int vitoriasP2 = 0;
+    private int semVencedor = 0;
+
+    private ArrayList<PassoTreinamento> jogaPartidaTreinamento(IA ia) throws OrtException {
+        Jogo jogoP1 = new JogoTreinoP1(ia); // P1 começa com a perspectiva do P2
+        ArrayList<PassoTreinamento> jogadasP1= new ArrayList<>();
+
+        Jogo jogoOficial = new JogoIA(ia);
+        ArrayList<PassoTreinamento> jogadasP2= new ArrayList<>();
+
+
+        int jogadas = 0;
+        while (!jogoOficial.getResultado().terminou() && jogadas < MAX_JOGADAS){
+            jogadas++;
+            // regra não define o que fazer quando a jogadora da vez não tem jogada: descarta a partida
+            if (!temJogada(jogoOficial)) break;
+
+            if (jogoOficial.getJogadoraAtual() == Jogadora.JOGADORA_2){
+                int[] jogada = ia.escolheJogada(jogoOficial);
+                PassoTreinamento passo = new PassoTreinamento(jogoOficial.getTabuleiro(), jogoOficial.deveMoverPacoca(), jogada);
+                jogoOficial.jogaRodadaPvP(jogada[0], jogada[1], jogada[2], jogada[3]);
+                jogoP1.jogaRodadaPvP(TAMANHO_TAB - jogada[0], jogada[1], TAMANHO_TAB - jogada[2], jogada[3]);
+                jogadasP2.add(passo);
+            }
+            else{
+                int[] jogada = ia.escolheJogada(jogoP1);
+                PassoTreinamento passo = new PassoTreinamento(jogoP1.getTabuleiro(), jogoP1.deveMoverPacoca(), jogada);
+                jogoOficial.jogaRodadaPvP(TAMANHO_TAB - jogada[0], jogada[1], TAMANHO_TAB - jogada[2], jogada[3]);
+                jogoP1.jogaRodadaPvP(jogada[0], jogada[1] , jogada[2], jogada[3]);
+                jogadasP1.add(passo);
+            }
+        }
+        
+        if (jogoOficial.getResultado() == ResultadoPartida.VITORIA_JOGADORA_1) {
+            vitoriasP1++;
+            return jogadasP1;
+        }
+        if (jogoOficial.getResultado() == ResultadoPartida.VITORIA_JOGADORA_2) {
+            vitoriasP2++;
+            return jogadasP2;
+        }
+        semVencedor++;
+        return new ArrayList<>();
+    }
+
+    private static boolean temJogada(Jogo jogo) {
+        for (boolean origem : IA.mascaraOrigens(jogo)) {
+            if (origem) return true;
+        }
+        return false;
+    }
+
+    private void enviaListaJogadas(ArrayList<PassoTreinamento> listaJogadas){
+        // Gera uma lista de objetos {"tabuleiro": [[[...]]], "jogaPacoquinha": bool, "jogada": [ol, oc, dl, dc]},
+        // formato esperado por lerTabuleiros() em python/treino.py
+        Gson gson = new Gson();
+        try (FileWriter escritor = new FileWriter(CAMINHO_JSON)) {
+            gson.toJson(listaJogadas, escritor);
+        } catch (IOException e) {
+            System.err.println("Erro ao salvar " + CAMINHO_JSON + ": " + e.getMessage());
+        }
+    }
+
+    public static void main(String[] args) throws OrtException {
+        int numPartidas = PARTIDAS_PADRAO;
+        if (args.length > 0) {
+            numPartidas = Integer.parseInt(args[0]);
+        }
+        double epsilon = EPSILON_PADRAO;
+        if (args.length > 1) {
+            epsilon = Double.parseDouble(args[1]);
+        }
+
+        TreinoIA treino = new TreinoIA();
+        ArrayList<PassoTreinamento> todasJogadas = new ArrayList<>();
+        try (IA ia = new IA()) {
+            ia.setEpsilon(epsilon);
+            for (int i = 0; i < numPartidas; i++) {
+                todasJogadas.addAll(treino.jogaPartidaTreinamento(ia));
+            }
+        }
+        treino.enviaListaJogadas(todasJogadas);
+
+        System.out.printf("Partidas: %d | vitórias P1: %d | vitórias P2: %d | sem vencedor: %d | passos: %d%n",
+                numPartidas, treino.vitoriasP1, treino.vitoriasP2, treino.semVencedor, todasJogadas.size());
+    }
+}

@@ -1,0 +1,175 @@
+package jogo;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Map;
+import java.util.Random;
+
+import ai.onnxruntime.OnnxTensor;
+import ai.onnxruntime.OrtEnvironment;
+import ai.onnxruntime.OrtException;
+import ai.onnxruntime.OrtSession;
+import jogo.tipos_jogo.Jogo;
+
+//classe criada por IA responsável por fazer a inferência do modelo onnx e escolher a jogada
+public class IA implements AutoCloseable {
+    public static final String CAMINHO_MODELO = "jogo/modelo_pacoquinha.onnx";
+    private static final int TAMANHO = 5;
+    private static final int ENTRADAS = 3 * TAMANHO * TAMANHO + 1;
+
+    private final OrtEnvironment ambiente;
+    private final OrtSession sessao;
+    private final Random aleatorio = new Random();
+    private double epsilon = 0; // chance de jogar aleatoriamente; 0 fora do treino
+
+    public IA() throws OrtException {
+        // usa o modelo do disco se existir (treino); senão o que vem dentro do .jar
+        ambiente = OrtEnvironment.getEnvironment();
+        if (Files.exists(Path.of(CAMINHO_MODELO))) {
+            sessao = ambiente.createSession(CAMINHO_MODELO, new OrtSession.SessionOptions());
+        } else {
+            sessao = ambiente.createSession(leModeloEmbutido(), new OrtSession.SessionOptions());
+        }
+    }
+
+    private static byte[] leModeloEmbutido() throws OrtException {
+        try (InputStream entrada = IA.class.getResourceAsStream("/modelo_pacoquinha.onnx")) {
+            if (entrada == null) {
+                throw new OrtException("Modelo não encontrado: " + CAMINHO_MODELO);
+            }
+            return entrada.readAllBytes();
+        } catch (IOException e) {
+            throw new OrtException("Erro ao ler o modelo embutido: " + e.getMessage());
+        }
+    }
+
+    public IA(String caminhoModelo) throws OrtException {
+        ambiente = OrtEnvironment.getEnvironment();
+        sessao = ambiente.createSession(caminhoModelo, new OrtSession.SessionOptions());
+    }
+
+    public float[][] inferencia(float[] entrada) throws OrtException {
+        // retorna {logitsPeca, logitsDestino}, cada um com 25 posições
+        try (OnnxTensor tensor = OnnxTensor.createTensor(ambiente, new float[][]{entrada});
+             OrtSession.Result resultado = sessao.run(Map.of("entrada", tensor))) {
+            float[][] logitsPeca = (float[][]) resultado.get(0).getValue();
+            float[][] logitsDestino = (float[][]) resultado.get(1).getValue();
+            return new float[][]{logitsPeca[0], logitsDestino[0]};
+        }
+    }
+
+    public void setEpsilon(double epsilon) {
+        this.epsilon = epsilon;
+    }
+
+    public int[] escolheJogada(Jogo jogo) throws OrtException {
+        // exploração: logits zerados dão probabilidade igual a todas as jogadas válidas
+        boolean explora = aleatorio.nextDouble() < epsilon;
+        float[][] logits;
+        if (explora) {
+            logits = new float[][]{new float[TAMANHO * TAMANHO], new float[TAMANHO * TAMANHO]};
+        } else {
+            logits = inferencia(montaEntrada(jogo));
+        }
+
+        float[] logitsPeca = logits[0];
+        aplicaMascara(logitsPeca, mascaraOrigens(jogo));
+        int origem = amostraSoftmax(logitsPeca);
+        int origemLinha = origem / TAMANHO;
+        int origemColuna = origem % TAMANHO;
+
+        // o destino só pode ser uma casa alcançável a partir da origem sorteada
+        float[] logitsDestino = logits[1];
+        aplicaMascara(logitsDestino, jogo.destinosValidos(origemLinha, origemColuna));
+        int destino = amostraSoftmax(logitsDestino);
+
+        return new int[]{origemLinha, origemColuna, destino / TAMANHO, destino % TAMANHO};
+    }
+
+    public static float[] montaEntrada(Jogo jogo) {
+        // mesma ordem do flatten do numpy em lerTabuleiros: [camada][linha][coluna] + flag da paçoca
+        float[][][] tabuleiro = jogo.getTabuleiro();
+        float[] entrada = new float[ENTRADAS];
+        int i = 0;
+        for (float[][] camada : tabuleiro) {
+            for (float[] linha : camada) {
+                for (float casa : linha) {
+                    entrada[i++] = casa;
+                }
+            }
+        }
+        if (jogo.deveMoverPacoca()) {
+            entrada[i] = 1f;
+        } else {
+            entrada[i] = 0f;
+        }
+        return entrada;
+    }
+
+    public static boolean[] mascaraOrigens(Jogo jogo) {
+        // mesma regra de camada usada em jogaRodadaPvP
+        int camada = 0;
+        if (!jogo.deveMoverPacoca()) {
+            camada = jogo.getJogadoraAtual().camada();
+        }
+        float[][][] tabuleiro = jogo.getTabuleiro();
+        boolean[] mascara = new boolean[TAMANHO * TAMANHO];
+
+        for (int linha = 0; linha < TAMANHO; linha++) {
+            for (int coluna = 0; coluna < TAMANHO; coluna++) {
+                if (tabuleiro[camada][linha][coluna] != 1) continue;
+
+                for (boolean destino : jogo.destinosValidos(linha, coluna)) {
+                    if (destino) {
+                        mascara[linha * TAMANHO + coluna] = true;
+                        break;
+                    }
+                }
+            }
+        }
+        return mascara;
+    }
+
+    public static void aplicaMascara(float[] logits, boolean[] mascara) {
+        // -infinito vira probabilidade 0 no softmax
+        for (int i = 0; i < logits.length; i++) {
+            if (!mascara[i]) logits[i] = Float.NEGATIVE_INFINITY;
+        }
+    }
+
+    public int amostraSoftmax(float[] logits) {
+        float maximo = Float.NEGATIVE_INFINITY;
+        for (float logit : logits) maximo = Math.max(maximo, logit);
+        if (maximo == Float.NEGATIVE_INFINITY) {
+            throw new IllegalStateException("Nenhuma jogada válida disponível");
+        }
+
+        // subtrai o máximo antes do exp para evitar overflow
+        double[] probabilidades = new double[logits.length];
+        double soma = 0;
+        for (int i = 0; i < logits.length; i++) {
+            probabilidades[i] = Math.exp(logits[i] - maximo);
+            soma += probabilidades[i];
+        }
+
+        double sorteio = aleatorio.nextDouble() * soma;
+        int ultimoValido = -1;
+        for (int i = 0; i < logits.length; i++) {
+            if (probabilidades[i] == 0) continue;
+            ultimoValido = i;
+            sorteio -= probabilidades[i];
+            if (sorteio <= 0) return i;
+        }
+        if (ultimoValido >= 0) {
+            return ultimoValido;
+        }
+        throw new IllegalStateException("Não foi possível selecionar uma jogada válida.");
+    }
+
+    @Override
+    public void close() throws OrtException {
+        sessao.close();
+    }
+}

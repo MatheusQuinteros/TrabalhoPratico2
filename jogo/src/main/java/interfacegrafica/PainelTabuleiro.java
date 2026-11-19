@@ -5,7 +5,7 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.util.function.BiConsumer;
 import javax.swing.JPanel;
-import jogo.JogoDaPacoquinha;
+import jogo.tipos_jogo.Jogo;
 
 /** Grade 5x5 de casas; repassa os cliques e redesenha a partir do estado do jogo. */
 public class PainelTabuleiro extends JPanel {
@@ -31,8 +31,8 @@ public class PainelTabuleiro extends JPanel {
      * @param selecionada casa de origem escolhida, ou null
      * @param ultimo origem e destino do último movimento ({x1, y1, x2, y2}), ou null
      */
-    void atualizar(JogoDaPacoquinha jogo, int[] selecionada, int[] ultimo) {
-        boolean encerrada = jogo.getVencedora() != -1;
+    void atualizar(Jogo jogo, int[] selecionada, int[] ultimo) {
+        boolean encerrada = jogo.getResultado().terminou();
         for (int x = 0; x < TAMANHO; x++) {
             for (int y = 0; y < TAMANHO; y++) {
                 casas[x][y].setEnabled(!encerrada);

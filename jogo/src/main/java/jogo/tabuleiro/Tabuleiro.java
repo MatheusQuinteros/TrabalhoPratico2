@@ -1,0 +1,142 @@
+package jogo.tabuleiro;
+
+import jogo.tipos_jogo.JogadaInvalidaException;
+
+public class Tabuleiro {
+    private float[][][] tabuleiro; //float pois é mais prática a conversão para tensor no pytorch
+    private Peca pacoca;
+
+    public final int TAMANHO = 5;
+    public final int CAMADAS = 3;
+
+    public Tabuleiro(){
+        // Inicia o tabuleiro com as peças em seus locais iniciais
+        tabuleiro = new float[CAMADAS][TAMANHO][TAMANHO];
+
+        this.pacoca = new Peca(2,2);
+
+        for(int i = 0; i < TAMANHO; i++){ // peças jogador 1
+            tabuleiro[1][0][i] = 1;
+        }
+
+        for(int i = 0; i < TAMANHO; i++){ // peças jogador 1
+            tabuleiro[2][4][i] = 1;
+        }
+
+        tabuleiro[0][2][2] = 1; // paçoca
+    }
+
+    public float[][][] getTabuleiro() {
+        return copiar(tabuleiro);
+    }
+
+    public Peca getPacoca(){
+        return pacoca;
+    }
+
+    public void jogar(int origemX, int origemY, int camada, int destinoX, int destinoY) {
+        if (camada < 0 || camada >= CAMADAS
+                || origemX < 0 || origemX >= TAMANHO
+                || origemY < 0 || origemY >= TAMANHO
+                || destinoX < 0 || destinoX >= TAMANHO
+                || destinoY < 0 || destinoY >= TAMANHO) {
+            throw new JogadaInvalidaException("A origem ou o destino está fora do tabuleiro.");
+        }
+
+        if (tabuleiro[camada][origemX][origemY] != 1) {
+            throw new JogadaInvalidaException("A origem não contém a peça que deve ser movida.");
+        }
+
+        int deslocamentoX = destinoX - origemX;
+        int deslocamentoY = destinoY - origemY;
+
+        if (deslocamentoX == 0 && deslocamentoY == 0) {
+            throw new JogadaInvalidaException("A peça precisa sair da casa de origem.");
+        }
+        if (deslocamentoX != 0 && deslocamentoY != 0
+                && Math.abs(deslocamentoX) != Math.abs(deslocamentoY)) {
+            throw new JogadaInvalidaException("A peça só pode se mover em linha reta ou na diagonal.");
+        }
+
+        int[] ultima = ultimaCasaLivre(origemX, origemY,
+                Integer.signum(deslocamentoX), Integer.signum(deslocamentoY));
+
+        if (destinoX != ultima[0] || destinoY != ultima[1]) {
+            throw new JogadaInvalidaException("O destino precisa ser a última casa livre naquela direção.");
+        }
+
+        tabuleiro[camada][origemX][origemY] = 0;
+        tabuleiro[camada][destinoX][destinoY] = 1;
+
+        if (camada == 0) {
+            if (pacoca == null) {
+                // Alteração por IA: compatível com o construtor Peca(int, int).
+                pacoca = new Peca(destinoX, destinoY);
+            }
+            pacoca.x = destinoX;
+            pacoca.y = destinoY;
+        }
+    }
+
+    public boolean[] destinosValidos(int origemX, int origemY) {
+        // Índice linear linha * TAMANHO + coluna, igual ao usado no treino em Python
+        boolean[] destinos = new boolean[TAMANHO * TAMANHO];
+        for (int passoX = -1; passoX <= 1; passoX++) {
+            for (int passoY = -1; passoY <= 1; passoY++) {
+                if (passoX == 0 && passoY == 0) continue;
+
+                int[] ultima = ultimaCasaLivre(origemX, origemY, passoX, passoY);
+                if (ultima[0] != origemX || ultima[1] != origemY) {
+                    destinos[ultima[0] * TAMANHO + ultima[1]] = true;
+                }
+            }
+        }
+        return destinos;
+    }
+
+    private int[] ultimaCasaLivre(int origemX, int origemY, int passoX, int passoY) {
+        int ultimoX = origemX;
+        int ultimoY = origemY;
+
+        // Encontra a última casa vazia antes de uma peça ou da borda.
+        while (true) {
+            int proximoX = ultimoX + passoX;
+            int proximoY = ultimoY + passoY;
+
+            if (proximoX < 0 || proximoX >= TAMANHO
+                    || proximoY < 0 || proximoY >= TAMANHO) {
+                break;
+            }
+
+            boolean ocupada = false;
+            for (int c = 0; c < CAMADAS; c++) {
+                if (tabuleiro[c][proximoX][proximoY] != 0) {
+                    ocupada = true;
+                    break;
+                }
+            }
+            if (ocupada) {
+                break;
+            }
+
+            ultimoX = proximoX;
+            ultimoY = proximoY;
+        }
+
+        return new int[]{ultimoX, ultimoY};
+    }
+
+    public static float[][][] copiar(float[][][] original) { //copia o tabuleiro para não alterar o original
+    float[][][] copia = new float[original.length][][];
+    for (int c = 0; c < original.length; c++) {
+        copia[c] = new float[original[c].length][];
+        for (int l = 0; l < original[c].length; l++) {
+            copia[c][l] = new float[original[c][l].length];
+            for (int k = 0; k < original[c][l].length; k++) {
+                copia[c][l][k] = original[c][l][k];
+            }
+        }
+    }
+    return copia;
+}
+}

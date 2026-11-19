@@ -1,4 +1,9 @@
 .claude/settings.local.json
+target/
 out/
 testes/TesteJogo.java
 venv/
+dados/
+__pycache__/
+python/modelos/
+dist/
